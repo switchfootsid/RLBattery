@@ -1,4 +1,4 @@
-from numpy as numpy
+import numpy as np 
 from sklearn import linear_model
 from sklearn.svm import SVR
 from sklearn import tree
@@ -20,16 +20,16 @@ class FittedQIteration:
 		#self.model = model
 		self.kernel = str(kernel)
 
-	if self.model_name == 'linear':
-		self.model = linear_model.LinearRegression()
+		if self.model_name == 'linear':
+			self.model = linear_model.LinearRegression()
 
-	elif self.model_name == 'ridge':
-		self.model = linear_model.Ridge(alpha='l2')
+		elif self.model_name == 'ridge':	
+			self.model = linear_model.Ridge(alpha='l2')
 
-	elif self.model_bame == 'svr':
-		self.model = SVR(kernel='rbf', C=1e3, gamma=0.1)
-	else:
-		self.model = None
+		elif self.model_bame == 'svr':
+			self.model = SVR(kernel='rbf', C=1e3, gamma=0.1)
+		else:
+			self.model = None
 
 
 	def feature_extraction(self, state, action):
@@ -50,32 +50,13 @@ class FittedQIteration:
 			stateaction[action,:] = state
 			return stateaction.flatten()
 
-		elif kernel = 'tile_coding':
-			features = self.CMAC_features(state):
+		elif kernel == 'tile_coding':
+			features = self.CMAC_features(state)
 		else:
 			features = state
 
 		return features
 
-
-	def RBF_features(self, state):
-		'''
-		- Calculate RBF features for each state variable, ||state_var - center||**2 
-		
-		param state: calculate state variables
-
-		returns: 
-
-		'''
-		beta = beta
-		length = len(state)
-		centers = np.random.uniform(self.) #FILL THIS
-
-		if self.length == 0:
-			return np.ones((1,))
-		else:
-			state_var = np.array(state)
-			return np.array([np.exp(-self.eta * np.linalg.norm(state_var-c)**2) for c in centers])
 
 	def CMAC_features(state):
 		'''
@@ -86,7 +67,7 @@ class FittedQIteration:
 		pass
 
 
-	def predictQval(self, state, legal_actions):
+	def predictQvalue(self, state, agent_instance, legal_actions):
 		'''
 		- Get the best Q-value function for the greedy action in State 
 
@@ -101,7 +82,7 @@ class FittedQIteration:
 		qvalues = []
 
 		for action_index in legal_actions:
-			action = agent.actions[action_index]
+			action = agent_instance.actions[action_index]
 			features = np.asarray(state.append(action))
 			prediction = self.model.predict(features)
 			qvalues.append(prediciton)
@@ -139,7 +120,8 @@ class FittedQIteration:
 		
 				legal_next_actions = agent_instance.get_legal_actions(nextState)
 			
-				next_qvals = []#defaultdict or np.zeros ?????
+				next_qvals = [] #defaultdict or np.zeros ?????
+				
 				'''
 				for action_index in legal_next_actions:
 					##How to represent actions? Index or Numerical? 
@@ -147,11 +129,11 @@ class FittedQIteration:
 					features = np.asarray(currentState.append(action))
 					new_qval = self.model.predict(features)
 					next_qvals.append(new_qval)
-				
+					https://github.com/switchfootsid/RLBattery.git
 				best_qval = next_qvals.max()
 				'''
 				
-				target = reward + agent_instance.gamma * best_qval
+				target = reward + agent_instance.gamma * kQvalue
 
 			currentSA = currentState.append(action)
 			
