@@ -26,7 +26,7 @@ class FunctionApproximation:
 		elif self.model_name == 'ridge':	
 			self.model = linear_model.Ridge(alpha='l2')
 
-		elif self.model_bame == 'svr':
+		elif self.model_name == 'svr':
 			self.model = SVR(kernel='rbf', C=1e3, gamma=0.1)
 		else:
 			self.model = None
