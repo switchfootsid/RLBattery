@@ -35,18 +35,18 @@ class Environment :
 	def getNextState(self, state_k, action_k) :
 	
 		current_netload = state_k[0]
-        current_energy = state_k[1]
+        	current_energy = state_k[1]
 		
 		if action_k >= 0:
-            P_charge, P_discharge = action_k, 0.0
-        else:
-            P_charge, P_discharge = 0.0, action_k
+            		P_charge, P_discharge = action_k, 0.0
+	        else:
+	            P_charge, P_discharge = 0.0, action_k
 			
-        E_next = current_energy + self.eta * P_charge + P_discharge
-        P_grid = current_netload + P_charge + P_discharge
-		isValid = (P_grid < 0)
-		reward  = -P_grid*self.get_price(time_step)
-		
+	        E_next = current_energy + self.eta * P_charge + P_discharge
+	        P_grid = current_netload + P_charge + P_discharge
+			isValid = (P_grid < 0)
+			reward  = -P_grid*self.get_price(time_step)
+			
 		nextState = (P_grid, E_next)
 		return (nextState, reward, isValid)
 	
@@ -61,20 +61,20 @@ class Environment :
 				QValue=model.predictQvalue(state,action)
 				optimalAction=action
 				flag=1
-            else:
+	            	else:
 				if QValue < model.predictQvalue(state, action):
 					QValue = model.predictQvalue(state, action)
 					optimalAction=action
-        return [optimalAction],QValue
+        	return [optimalAction],QValue
 	
 	def getNetload(self, timeStep) :
 		"change here by Siddharth "
 		df_solar = pd.read_csv('./solar_clean.csv')
-    	df_load = pd.read_csv('./load_data_peak6.csv')
-    	#diff = (df_load.ix[0:self.day_chunk-1] - df_solar.ix[0:self.day_chunk-1]) #change here by Siddharth, just take first 15 days 
-    	#net_load = pd.concat([diff]*self.training_time, ignore_index=True).values.tolist() #check format
-    	
-    	return net_load[timeStep-1]
+	    	df_load = pd.read_csv('./load_data_peak6.csv')
+	    	#diff = (df_load.ix[0:self.day_chunk-1] - df_solar.ix[0:self.day_chunk-1]) #change here by Siddharth, just take first 15 days 
+	    	#net_load = pd.concat([diff]*self.training_time, ignore_index=True).values.tolist() #check format
+	    	
+	    	return net_load[timeStep-1]
 
 	
 	def getPrice(self, timeStep) :
