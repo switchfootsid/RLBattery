@@ -1,15 +1,29 @@
 from copy import deepcopy
 
 class Environment :
-	def __init__(self, currentState, Gamma, Eta, day_chunk, total_years) :
+	def __init__(self, Gamma, Eta, day_chunk, total_years) :
 		"change here by Siddharth "
 		self.Eta = Eta #(battery efficiency)
 		self.Gamma = Gamma
-		self.currentState = currentState
+		self.df_solar = pd.read_csv('./solar_clean.csv')
+	    	self.df_load = pd.read_csv('./load_data_peak6.csv')
 		self.training_time = day_chunk*total_years #change here by Siddharth
 		self.diff = (df_load.ix[0:self.day_chunk-1] - df_solar.ix[0:self.day_chunk-1]) #change here by Siddharth, just take first 15 days 
     		self.net_load = pd.concat([self.diff]*self.training_time, ignore_index=True).values.tolist()
-	
+    		self.currentState = None
+		
+	def setInitialState(self, epsiode_number, E_init):
+		'''
+		Set's the initialState (0th hour) for episode_number.
+		episode_number 
+		E_init - passed by agent class
+		'''
+		net_load = float(net_load.iloc[episode_number][0])
+		energy_level = E_init
+		price = self.getPrice(0)
+		
+		self.currentState = [net_load, energy_level, price]
+		
 	def next_step(self, action_sequence, k, FA, agent) :
 		'''
 	        Perform constraint checking (energy, grid) and assign penalty/rewards.
@@ -69,16 +83,11 @@ class Environment :
 	
 	def getNetload(self, timeStep) :
 		"change here by Siddharth "
-		df_solar = pd.read_csv('./solar_clean.csv')
-	    	df_load = pd.read_csv('./load_data_peak6.csv')
-	    	#diff = (df_load.ix[0:self.day_chunk-1] - df_solar.ix[0:self.day_chunk-1]) #change here by Siddharth, just take first 15 days 
-	    	net_load = pd.concat([diff]*self.training_time, ignore_index=True).values.tolist() #check format
-	    	
 	    	return net_load[timeStep-1]
 
 	
 	def getPrice(self, timeStep) :
-		price = np.array([.040,.040,.040,.040,.040,.040,.080,.080,.080,.080,.040,.040,.080,.080,.080,.040,.040,.120,.120,.040,.040,.040,.040,.040]).tolist()
+		price = [.040,.040,.040,.040,.040,.040,.080,.080,.080,.080,.040,.040,.080,.080,.080,.040,.040,.120,.120,.040,.040,.040,.040,.040]
 		return price[timeStep-1]
 		
 	
