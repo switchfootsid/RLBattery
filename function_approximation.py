@@ -7,7 +7,7 @@ class FittedQIteration:
 	'''
 	Training algorithm: Variety of algorithms (linear, ridge, tree based, kernelized) used for representing the Q(s,a). 
 
-    Feature Extraction: Construct kernelized features (RBF, Fourier etc) from state variables for capturing non-linearity
+    	Feature Extraction: Construct kernelized features (RBF, Fourier etc) from state variables for capturing non-linearity
 
    	Batches: FittedQIteration alternates between constructing batches of experience and then fitting the Q-function.
 
@@ -31,9 +31,9 @@ class FittedQIteration:
 		else:
 			self.model = None
 
-
 	def feature_extraction(self, state, action):
 		'''
+		* NOT USING currently *
 		- Return a basis or prjection of variable into high dimensional space, kernelize features. 
 		- This is similar to Tile Coding or RBF networks. 
 
@@ -57,15 +57,14 @@ class FittedQIteration:
 
 		return features
 
-
-	def CMAC_features(state):
+	def CMAC_features(self, state, action):
 		'''
+		* NOT USING CURRENTLY * 
 		- Copy code from Rich Sutton's website.
 		state: state variables
 		return: number of on tiles for the state space.
 		'''
 		pass
-
 
 	def predictQvalue(self, state, agent_instance, legal_actions):
 		'''
@@ -87,7 +86,6 @@ class FittedQIteration:
 			prediction = self.model.predict(features)
 			qvalues.append(prediciton)
 		return qvalues.max()
-
 
 	def update_qfunction(self, minibatch, agent_instance):
 		'''
@@ -145,29 +143,5 @@ class FittedQIteration:
 
 		#Now update the model or Q-function
 		self.model.fit(X_trian, y_train)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+		
+		return None
