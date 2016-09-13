@@ -26,7 +26,7 @@ class LearningAgent:
         
 
 
-    def getLegalActions(self, currentState, environment):
+    def getLegalActions(self, currentState):
             '''
             Calculate and return allowable action set
             Output: List of indices of allowable actions
@@ -44,28 +44,28 @@ class LearningAgent:
     def getAction(self, state, model, environment, k, gama):
          """returns a tupple of optimal actions , reward."""
          if k==0:
-             legalActions=self.getLegalActions(self.currentState, environment)
+             legalActions=self.getLegalActions(self.currentState)
              flag=0             
              QValue=None
              optimalAction=None
              for action in legalActions:
                  if flag==0:
-                     QValue=model.predictQvalue(state,action)
+                     QValue=model.predictQvalue(state,self,legalActions)  #check this
                      optimalAction=action
                      flag=1
                  else:
-                     if QValue < model.predictQvalue(state,action):
-                        QValue=model.predictQvalue(state,action)
-                         optimalAction=action
+                     if QValue < model.predictQvalue(state,self,legalActions):
+                        QValue=model.predictQvalue(state,self,legalActions)
+                        optimalAction=action
              return [optimalAction],gama*QValue
          else:
-             legalActions=self.getLegalActions(self.currentState,environment)
+             legalActions=self.getLegalActions(self.currentState)  #check this
              optimalReward=None
              optimalActions=[]
              currentOPtimalAction=None
              for action in legalActions:
                  #check the return order for getNextState here
-                 nextState,current_reward, isValid =self.getNextState(model,environment,k-1)
+                 nextState,current_reward, isValid =environment.getNextState(state,action) 
                  if isValid:
                      continue                    
                  actionTupples,reward=self.getAction(nextState,model,environment,k-1,gama)
