@@ -15,10 +15,10 @@ class FunctionApproximation:
 
 	'''
 
-	def __init__(self, name, kernel):
+	def __init__(self, name):
 		self.model_name = str(name)
 		#self.model = model
-		self.kernel = str(kernel)
+		#self.kernel = str(kernel)
 
 		if self.model_name == 'linear':
 			self.model = linear_model.LinearRegression()
