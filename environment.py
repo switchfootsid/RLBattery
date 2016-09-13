@@ -8,16 +8,16 @@ class Environment :
 		self.currentState = currentState
 		self.training_time = day_chunk*total_years #change here by Siddharth
 		self.diff = (df_load.ix[0:self.day_chunk-1] - df_solar.ix[0:self.day_chunk-1]) #change here by Siddharth, just take first 15 days 
-    	self.net_load = pd.concat([self.diff]*self.training_time, ignore_index=True).values.tolist()
+    		self.net_load = pd.concat([self.diff]*self.training_time, ignore_index=True).values.tolist()
 	
 	def next_step(self, action_sequence, k, FA, agent) :
 		'''
-        Perform constraint checking (energy, grid) and assign penalty/rewards.
-        Output: reward/penalty, next state, constraint satisfaction (boolean)
-        '''
+	        Perform constraint checking (energy, grid) and assign penalty/rewards.
+	        Output: reward/penalty, next state, constraint satisfaction (boolean)
+	        '''
 		cumulativeReward, lastState = self.getCumulativeReward(k, action_sequence)
-        self.currentState, reward, isValid = self.getNextState(self.currentState, action_sequence[0])
-        qValueLastState = FA.predictQvalue(lastState, agent.getLegalActions(lastState, self))
+	        self.currentState, reward, isValid = self.getNextState(self.currentState, action_sequence[0])
+	        qValueLastState = FA.predictQvalue(lastState, agent.getLegalActions(lastState, self))
 		return currentState, cumulativeReward + (self.Gamma**3)*qValueLastState, isValid
 	
 	def getCumulativeReward(self, k, actions) :
@@ -40,12 +40,12 @@ class Environment :
 		if action_k >= 0:
             		P_charge, P_discharge = action_k, 0.0
 	        else:
-	            P_charge, P_discharge = 0.0, action_k
+	        	P_charge, P_discharge = 0.0, action_k
 			
 	        E_next = current_energy + self.eta * P_charge + P_discharge
 	        P_grid = current_netload + P_charge + P_discharge
-			isValid = (P_grid < 0)
-			reward  = -P_grid*self.get_price(time_step)
+		isValid = (P_grid < 0)
+		reward  = -P_grid*self.get_price(time_step)
 			
 		nextState = (P_grid, E_next)
 		return (nextState, reward, isValid)
