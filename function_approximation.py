@@ -3,7 +3,7 @@ from sklearn import linear_model
 from sklearn.svm import SVR
 from sklearn import tree
 
-class FittedQIteration:
+class FunctionApproximation:
 	'''
 	Training algorithm: Variety of algorithms (linear, ridge, tree based, kernelized) used for representing the Q(s,a). 
 
