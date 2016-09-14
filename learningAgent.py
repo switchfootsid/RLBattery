@@ -65,10 +65,10 @@ class LearningAgent:
              currentOPtimalAction=None
              for action in legalActions:
                  #check the return order for getNextState here
-                 nextState,current_reward, isValid =environment.getNextState(state,action,timeStamp) 
+                 nextState,current_reward, isValid =environment.getNextState(timeStamp, state, action) 
                  if isValid:
                      continue                    
-                 actionTupples,reward=self.getAction(nextState,model,environment,k-1,gama,timeStamp+1)
+                 actionTupples,reward=self.getAction(nextState, model, environment, k-1, gama, timeStamp+1)
                  if optimalReward==None:
                      continue
                  if optimalReward < current_reward + gama*reward:
