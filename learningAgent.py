@@ -18,7 +18,7 @@ class LearningAgent:
     def __init__(self, currentState, actions, E_cap,P_cap,epsilon):
         self.currentState=currentState
         self.actions=actions
-        self.E_cap=E_cap
+        self.E_max=E_cap
         self.P_cap=P_cap          
         self.epsilon=epsilon
         self.E_min = (1-0.80)*self.E_cap #depth of discharge
