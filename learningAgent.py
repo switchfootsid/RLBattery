@@ -41,7 +41,7 @@ class LearningAgent:
                 legal_actions.append(k)
             return legal_actions
     
-    def getAction(self, state, model, environment, k, gama):
+    def getAction(self, state, model, environment, k, gama,timeStamp):
          """returns a tupple of optimal actions , reward."""
          if k==0:
              legalActions=self.getLegalActions(self.currentState)
@@ -65,10 +65,10 @@ class LearningAgent:
              currentOPtimalAction=None
              for action in legalActions:
                  #check the return order for getNextState here
-                 nextState,current_reward, isValid =environment.getNextState(state,action) 
+                 nextState,current_reward, isValid =environment.getNextState(state,action,timeStamp) 
                  if isValid:
                      continue                    
-                 actionTupples,reward=self.getAction(nextState,model,environment,k-1,gama)
+                 actionTupples,reward=self.getAction(nextState,model,environment,k-1,gama,timeStamp+1)
                  if optimalReward==None:
                      continue
                  if optimalReward < current_reward + gama*reward:
