@@ -34,11 +34,14 @@ class LearningAgent:
             energy_level = currentState[1] #1->energy level
             lower_bound = max(self.E_min - energy_level, -self.P_cap)
             upper_bound = min(self.E_max - energy_level, self.P_cap)
+            
             max_bin = int(np.digitize(upper_bound, self.actions, right=True)) ###
-            min_bin = int(np.digitize(lower_bound, self.actions, right=True)) ###            
+            min_bin = int(np.digitize(lower_bound, self.actions)) ###            
+            
             legal_actions = []
-            for k in range(min_bin, max_bin+1):
+            for k in range(min_bin, max_bin):
                 legal_actions.append(k)
+            print 'Legal Action Indices',legal_actions
             return legal_actions
     
     def getAction(self,episodeNumber, state, model, environment, k, gama,timeStamp):
@@ -48,7 +51,7 @@ class LearningAgent:
              flag=0             
              QValue=None
              optimalAction=None
-             for action in legalActions:
+             for action in legalActions: #this is an index
                  if flag==0:
                      QValue=model.predictQvalue(state,self,legalActions)  #check this
                      optimalAction=action
@@ -65,7 +68,8 @@ class LearningAgent:
              currentOPtimalAction=None
              for action in legalActions:
                  #check the return order for getNextState here
-                 nextState,current_reward, isValid =environment.getNextState(episodeNumber,timeStamp, state, action) 
+                 print 'getAction: ',self.actions, action
+                 nextState,current_reward, isValid =environment.getNextState(episodeNumber,timeStamp, state, self.actions[action]) 
                  if isValid:
                      continue                    
                  actionTupples,reward=self.getAction(episodeNumber,nextState, model, environment, k-1, gama, timeStamp+1)
@@ -75,7 +79,7 @@ class LearningAgent:
                      optimalReward = current_reward + gama*reward
                      currentOPtimalAction = action
                      optimalActions=actionTupples
-             return currentOPtimalAction+optimalActions, optimalReward
+             return [currentOPtimalAction]+optimalActions, optimalReward
                     
             
                  

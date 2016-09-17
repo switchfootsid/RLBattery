@@ -42,9 +42,11 @@ def main():
 		for time in range(total_number_hours) :
 
 			print time
-			action_sequence, rewardCumulative = learningAgent.getAction(learningAgent.currentState, funtionApproximator, environment, look_ahead, gamma, time)
+			#print "printing learningAgent's currentState"
+			#print learningAgent.currentState
+			action_sequence, rewardCumulative = learningAgent.getAction(episode_number, learningAgent.currentState, funtionApproximator, environment, look_ahead, gamma, time)
 			currentStateBackup = environment.currentState
-			nextState, qvalue, isValid = environment.nextStep(time, action_sequence, look_ahead, funtionApproximator, learningAgent)
+			nextState, qvalue, isValid = environment.nextStep(episode_number, time, [learningAgent.actions[action_index]for action_index in action_sequence], look_ahead, funtionApproximator, learningAgent)
 			batch.append([currentStateBackup, action_sequence[0], qvalue])
 
 			if(len(batch) >= bufferLength) :
