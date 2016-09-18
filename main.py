@@ -6,6 +6,12 @@ from environment import Environment
 from learningAgent import LearningAgent
 from function_approximation import FunctionApproximation
 
+'''
+To-Do:
+- Debug learning and convergence - hyperparameters 
+- 
+'''
+
 
 def main():
 	gamma = 0.9
@@ -34,14 +40,11 @@ def main():
 	#starting main episode loop
 	total_iterations = day_chunk*total_years
 
-	print total_iterations
-
 	while(episode_number < total_iterations) :
 
-		print episode_number
+		print (episode_number)
 		for time in range(total_number_hours) :
 
-			print time
 			#print "printing learningAgent's currentState"
 			#print learningAgent.currentState
 			action_sequence, rewardCumulative = learningAgent.getAction(episode_number, learningAgent.currentState, funtionApproximator, environment, look_ahead, gamma, time)
