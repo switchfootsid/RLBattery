@@ -68,7 +68,7 @@ class LearningAgent:
              currentOPtimalAction=None
              for action in legalActions:
                  #check the return order for getNextState here
-                 print 'getAction: ',self.actions, action
+                 #print 'getAction: ',self.actions, action
                  nextState,current_reward, isValid =environment.getNextState(episodeNumber,timeStamp, state, self.actions[action]) 
                  if isValid:
                      continue                    
