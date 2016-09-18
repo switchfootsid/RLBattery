@@ -54,7 +54,7 @@ class Environment :
 		return state, cr # target = (R1 + gamma*R2 + gamma2*Qmax
 	
 	def getNextState(self, episode_number, time_step, state_k, action_k) :
-		print "state in getNextState",state_k
+		#print "state in getNextState",state_k
 		current_netload = state_k[0]
         	current_energy = state_k[1]
 
@@ -72,7 +72,7 @@ class Environment :
 		reward  = -P_grid*self.getPrice(time_step)
 			
 		nextState = [self.getNetload(episode_number, time_step+1), E_next, self.getPrice(time_step)]
-		print "nextstate after ",nextState
+		#print "nextstate after ",nextState
 		return nextState, reward, isValid
 	
 	
