@@ -1,7 +1,7 @@
 from copy import deepcopy
 import pandas as pd
 
-debug = True
+debug = not True
 
 class Environment :
 	def __init__(self, Gamma, eta, day_chunk, total_years) :
@@ -27,39 +27,41 @@ class Environment :
 		price = self.getPrice(0)
 		
 		self.currentState = [net_load, energy_level, price]
-		if debug :
-			print "initialState = " + str(self.currentState)
 		
 	def nextStep(self, episode_number, time_step, action_sequence, k, FA, agent) :
 		'''
 	        Perform constraint checking (energy, grid) and assign penalty/rewards.
 	        Output: reward/penalty, next state, constraint satisfaction (boolean)
 	        '''
-		cumulativeReward, lastState = self.getCumulativeReward(episode_number, time_step, k, action_sequence)
+	        #print("the action sequences are ",action_sequence)
+	        print ('Action sequences for nextstep', action_sequence)
+		lastState,cumulativeReward= self.getCumulativeReward(episode_number, time_step, k, action_sequence)
+		print("current state before update,action,episode_number",self.currentState,action_sequence[0],episode_number)
 	        self.currentState, reward, isValid = self.getNextState(episode_number, time_step, self.currentState, action_sequence[0])
-	        qValueLastState = FA.predictQvalue(lastState, agent.getLegalActions(lastState, self))
-		return currentState, cumulativeReward + (self.Gamma**3)*qValueLastState, isValid
+	        print("current state after update",self.currentState)
+	        qValueLastState = FA.predictQvalue(lastState, agent, agent.getLegalActions(lastState) )
+		return self.currentState, cumulativeReward + (self.Gamma**3)*qValueLastState, isValid
 	
 	def getCumulativeReward(self, episode_number, time_step, k, actions) :
+		#print("actions in cumulativeReward",actions)
 		gamma = 1
 		state = deepcopy(self.currentState)
 		cr = 0
 		for i in range(0, k) :
+			#print("actions in get nextstate",actions)			
 			state, reward, isValid = self.getNextState(episode_number, time_step, state, actions[i])
 			time_step += 1
-			if(not isValid) :
+			if(isValid) :
 				return None
 			cr += gamma*reward 
 			gamma *= self.Gamma
+
 		return state, cr # target = (R1 + gamma*R2 + gamma2*Qmax
 	
 	def getNextState(self, episode_number, time_step, state_k, action_k) :
 		#print "state in getNextState",state_k
 		current_netload = state_k[0]
         	current_energy = state_k[1]
-
-        	if(debug) :
-        		print 'action in getnextstate', action_k
 		
 		if action_k >= 0:
             		P_charge, P_discharge = action_k, 0.0
@@ -70,7 +72,9 @@ class Environment :
 	        P_grid = current_netload + P_charge + P_discharge
 		isValid = (P_grid < 0)
 		reward  = -P_grid*self.getPrice(time_step)
-			
+		if isValid:
+			reward=-100
+
 		nextState = [self.getNetload(episode_number, time_step+1), E_next, self.getPrice(time_step)]
 		#print "nextstate after ",nextState
 		return nextState, reward, isValid
