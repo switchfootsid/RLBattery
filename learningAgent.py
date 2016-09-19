@@ -41,7 +41,7 @@ class LearningAgent:
             legal_actions = []
             for k in range(min_bin, max_bin):
                 legal_actions.append(k)
-            print 'Legal Action Indices',legal_actions
+            print 'Length and energy_level', len(legal_actions), energy_level
             return legal_actions
     
     def getAction(self,episodeNumber, state, model, environment, k, gama,timeStamp):
@@ -53,13 +53,13 @@ class LearningAgent:
              optimalAction=None
              for action in legalActions: #this is an index
                  if flag==0:
-                     QValue=model.predictQvalue(state,self,legalActions)  #check this
+                     QValue = model.predictQvalue(state, self, legalActions)  #check this
                      optimalAction=action
                      flag=1
                  else:
-                     if QValue < model.predictQvalue(state,self,legalActions):
-                        QValue=model.predictQvalue(state,self,legalActions)
-                        optimalAction=action
+                     if QValue < model.predictQvalue(state, self, legalActions):
+                        QValue = model.predictQvalue(state, self, legalActions)
+                        optimalAction = action
              return [optimalAction],gama*QValue
          else:
              legalActions=self.getLegalActions(self.currentState)  #check this
@@ -68,7 +68,7 @@ class LearningAgent:
              currentOPtimalAction=None
              for action in legalActions:
                  #check the return order for getNextState here
-                 print 'getAction: ',self.actions, action
+                 #print 'getAction: ',self.actions, action
                  nextState,current_reward, isValid =environment.getNextState(episodeNumber,timeStamp, state, self.actions[action]) 
                  if isValid:
                      continue                    

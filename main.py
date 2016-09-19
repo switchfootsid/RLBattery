@@ -61,6 +61,7 @@ def main():
 				if(not isValid) :
 				#reward_plot.something
 					break
+			
 
 		#Annealing of epsilon
 	learningAgent.epsilon -= 1/iterations  

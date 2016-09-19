@@ -28,7 +28,7 @@ class FunctionApproximation:
 
 		elif self.model_name == 'svr':
 			self.model = SVR(kernel='rbf', C=1e3, gamma=0.1)
-			self.model.fit(np.array([2.3, 3.5, 0.040, 1.00]), np.array([0.0]))
+			self.model.fit(np.array([2.3, 3.5, 0.040, 0.00]).reshape(1,4), np.array([0.0]).reshape(1,-1))
 		else:
 			self.model = None
 
@@ -86,6 +86,7 @@ class FunctionApproximation:
 			action = agent_instance.actions[action_index]
 			print action,"are the actions"
 			features=state+[action]
+			features = np.array(features).reshape(1,4)
 			print state
 			prediction = self.model.predict(features)
 			qvalues.append(prediction)
