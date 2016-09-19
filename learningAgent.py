@@ -1,156 +1,95 @@
-import numpy as np 
-from sklearn import linear_model
-from sklearn.svm import SVR
-from sklearn import tree
+# -*- coding: utf-8 -*-
+"""
+Created on Sun Sep  4 18:42:24 2016
 
-class FunctionApproximation:
-	'''
-	Training algorithm: Variety of algorithms (linear, ridge, tree based, kernelized) used for representing the Q(s,a). 
+@author: Kireeti
+"""
+import numpy as np
+import sys
+class LearningAgent:
+    
+    def __init__(self, currentState, actions, E_cap,P_cap,epsilon):
+        self.debug=True
+        self.currentState=currentState
+        self.actions=actions
+        self.E_max=E_cap
+        self.P_cap=P_cap          
+        self.epsilon=epsilon
+        self.E_min = (1-0.80)*self.E_max #depth of discharge
+        self.E_init = (0.30)*self.E_max #30% of charge every morning
+        
 
-    	Feature Extraction: Construct kernelized features (RBF, Fourier etc) from state variables for capturing non-linearity
 
-   	Batches: FittedQIteration alternates between constructing batches of experience and then fitting the Q-function.
+    def getLegalActions(self, currentState):
+            '''
+            Calculate and return allowable action set
+            Output: List of indices of allowable actions
+            '''
+            energy_level = currentState[1] # 1.8
+            lower_bound = max(self.E_min - energy_level, -self.P_cap) # 3.0
+            upper_bound = min(self.E_max - energy_level, self.P_cap) # -0.6
+            
+            max_bin = int(np.digitize(upper_bound, self.actions, right=True)) ###
+            min_bin = int(np.digitize(lower_bound, self.actions, right=True)) ###            
+            
+            legal_actions = []
+            for k in range(min_bin, max_bin):
+                legal_actions.append(k)
+            if self.debug:
+                file=open('debug.txt','a')
+                file.write('in getLegalActions in LearningAgent.py.......\n')
+                file.write("currentState = " + str(currentState) + " upper_bound = " + str(upper_bound) + "lower_bound = " + str(lower_bound) + " max_bin, min_bin = " + str((max_bin, min_bin)) + "\n") 
+                file.close()
+            return legal_actions
+    
+    def getAction(self,episodeNumber, state, model, environment, k, gama,timeStamp):
+         """returns a tupple of optimal actions , reward."""
+         if k==0:
+             legalActions=self.getLegalActions(self.currentState)
+             if self.debug and len(legalActions)==0:
+                file=open('debug.txt','a')
+                file.write('legalActions should not be empty in getAction in LearningAgent.py.......\n')
+                file.write(" episodeNumber = " + " " + str(episodeNumber) + " state = " + str(state) + " k =" + str(k) + " timeStamp = " + timeStamp + "\n") 
+                file.close()
+             flag=0             
+             Qvalues=[(legalActions[i],model.predictQvalue(state,self,[j])) for i,j in enumerate(legalActions)]
+             QValue=Qvalues[0][1]
+             optimalAction=Qvalues[0][0]
+             for a,q in Qvalues:
+                if q > QValue:
+                    optimalAction=a
+                    QValue=q 
+             return [optimalAction],gama*QValue
+         else:
+             legalActions=self.getLegalActions(self.currentState)  #check this
+             if self.debug and len(legalActions)==0:
+                file=open('debug.txt','a')
+                file.write('legalActions should not be empty in getAction in LearningAgent.py.......\n')
+                file.write(" episodeNumber = " + " " + str(episodeNumber) + " state = " + str(state) + " k =" + str(k) + " timeStamp = " + timeStamp + "\n") 
+                file.close()
+             optimalReward=None
+             optimalActions=[]
+             currentOPtimalAction=None
+             for action in legalActions:
+                 #check the return order for getNextState here
+                 #print 'getAction: ',self.actions, action
+                 nextState,current_reward, isValid =environment.getNextState(episodeNumber,timeStamp, state, self.actions[action]) 
+                 if isValid:
+                     continue                    
+                 actionTupples,reward=self.getAction(episodeNumber,nextState, model, environment, k-1, gama, timeStamp+1)
+                 if optimalReward < current_reward + gama*reward:
+                     optimalReward = current_reward + gama*reward
+                     currentOPtimalAction = action
+                     optimalActions=actionTupples
+             #print([currentOPtimalAction]+optimalActions, optimalReward)
+             return [currentOPtimalAction]+optimalActions, optimalReward
+                    
+            
+                 
+                 
+                 
+                
 
-   	Note: parameters/weights correspond to the chosen action in the given state
-
-	'''
-
-	def __init__(self, name):
-		self.debug = True
-		self.model_name = str(name)
-		#self.model = model
-		#self.kernel = str(kernel)
-
-		if self.model_name == 'linear':
-			self.model = linear_model.LinearRegression()
-
-		elif self.model_name == 'ridge':	
-			self.model = linear_model.Ridge(alpha='l2')
-
-		elif self.model_name == 'svr':
-			self.model = SVR(kernel='rbf', C=1e3, gamma=0.1)
-			self.model.fit(np.array([2.3, 3.5, 0.040, 1.00]).reshape(1,4), np.array([0.0]).reshape(1,-1))
-		else:
-			self.model = None
-
-	def feature_extraction(self, state, action):
-		'''
-		* NOT USING currently *
-		- Return a basis or prjection of variable into high dimensional space, kernelize features. 
-		- This is similar to Tile Coding or RBF networks. 
-
-		param state: state variables
-		param action: chosen action
-
-		returns: features/basis vectors for state variables
-
-		'''
-
-		if kernel == 'rbf':
-			features = self.RBF_features(state)
-			stateaction = np.zeros((self.actions, len(state)))
-			stateaction[action,:] = state
-			return stateaction.flatten()
-
-		elif kernel == 'tile_coding':
-			features = self.CMAC_features(state)
-		else:
-			features = state
-
-		return features
-
-	def CMAC_features(self, state, action):
-		'''
-		* NOT USING CURRENTLY * 
-		- Copy code from Rich Sutton's website.
-		state: state variables
-		return: number of on tiles for the state space.
-		'''
-		pass
-
-	def predictQvalue(self, state, agent_instance, legal_actions):
-		'''
-		- Get the best Q-value function for the greedy action in State 
-
-		param state: state variables (currentState, nextState)
-		param legal_actions: set of actions allowed in the state
-
-		return: maxQ(state, a) for a in legal_actions.
-		'''
-
-        	#stateaction = numpy.zeros((len(self.actions), len(state)))
-        	#stateaction[action,:] = state
-		qvalues = []
-
-		if self.debug and len(legal_actions)==0:
-	                file=open('debug.txt','a')
-	                file.write('legalActions should not be empty in getAction in LearningAgent.py.......\n')
-	                file.write(" state = " + str(state) + "\n") 
-	                file.close()
-		#print 'in predictQvalue ' + str(state)
-		#print("legal_actions in fa are",legal_actions)
-		for action_index in legal_actions:
-			action = agent_instance.actions[action_index]
-			features=state+[action]
-			features = np.array(features).reshape(1,4)
-			#print state
-			prediction = self.model.predict(features)
-			qvalues.append(prediction[0].tolist())
-
-		return np.max(qvalues)
-
-	def update_qfunction(self, minibatch, agent_instance):
-		'''
-		Fits the Q_function or the regression model to the experience or batch.
-
-		- Minibatch: (state_action_features, Q_targets) Vs (S, A, R, S1)
-		
-		param minibatch: random sample of a experience/batch. 
-		param agent_instance = agent object for accessing methods. 
-		return: None
-		'''
-		X_train = [] #features (states? actions? both?)
-		y_train = [] #qvalues
-
-		#Loop through the batch and create the training set.
-
-		for memory in minibatch:
-			#get the stored values first.
-
-			#currentState, currentAction, reward, nextState, kState = memory # currentState, kQvalue
-			print("memory is ",memory)
-			currentStateAction, kQvalue = memory
-
-			#Get prediction of Q(currentState, currentAaction)
-			#Ideally input features???
-			'''
-			if kQvalue <= -100:
-			#conditonal checking for invalid state
-				target = kQvalue
-			else: 
-		
-				#legal_next_actions = agent_instance.getLegalActions(nextState)
-			
-				next_qvals = [] #defaultdict or np.zeros ?????
-				
-				for action_index in legal_next_actions:
-					##How to represent actions? Index or Numerical? 
-					action = agent_instance.actions[action_index]
-					features = np.asarray(currentState.append(action))
-					new_qval = self.model.predict(features)
-					next_qvals.append(new_qval)
-					https://github.com/switchfootsid/RLBattery.git
-				best_qval = next_qvals.max()
-				
-				#target = kQvalue + agent_instance.gamma * kQvalue
-
-			#currentSA = currentState.append(action)
-			'''
-			X_train.append(np.asarray(currentStateAction))
-			y_train.append(np.asarray(kQvalue))
-
-		X_train = np.array(X_train)
-		y_train = np.array(y_train)
-
-		#Now update the model or Q-function
-		self.model.fit(X_train, y_train)
+        
+    
+        
