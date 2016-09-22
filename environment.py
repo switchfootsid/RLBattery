@@ -1,65 +1,55 @@
 from copy import deepcopy
 import pandas as pd
 
-debug = not True
-
 class Environment :
-	def __init__(self, Gamma, eta, day_chunk, total_years) :
+	def __init__(self, Gamma, Eta, day_chunk, total_years) :
 		"change here by Siddharth "
-		self.eta = eta #(battery efficiency)
+		self.Eta = Eta #(battery efficiency)
 		self.Gamma = Gamma
 		self.df_solar = pd.read_csv('./solardata.csv')
-	    	self.df_load = pd.read_csv('./load_data_peak6.csv')
-	    	self.day_chunk = day_chunk
+	   	self.df_load = pd.read_csv('./load_data_peak6.csv')
 		self.training_time = day_chunk*total_years #change here by Siddharth
-		self.diff = (self.df_load.ix[0:self.day_chunk-1] - self.df_solar.ix[0:self.day_chunk-1]) #change here by Siddharth, just take first 15 days 
+		self.diff = (df_load.ix[0:self.day_chunk-1] - df_solar.ix[0:self.day_chunk-1]) #change here by Siddharth, just take first 15 days 
     		self.net_load = pd.concat([self.diff]*self.training_time, ignore_index=True).values.tolist()
     		self.currentState = None
 		
-	def setCurrentState(self, episode_number, E_init):
+	def setInitialState(self, epsiode_number, E_init):
 		'''
 		Set's the initialState (0th hour) for episode_number.
 		episode_number 
 		E_init - passed by agent class
 		'''
-		net_load = float(self.net_load[episode_number][0])
+		net_load = float(net_load.iloc[episode_number][0])
 		energy_level = E_init
 		price = self.getPrice(0)
 		
 		self.currentState = [net_load, energy_level, price]
 		
-	def nextStep(self, episode_number, time_step, action_sequence, k, FA, agent) :
+	def next_step(self, time_step, action_sequence, k, FA, agent) :
 		'''
 	        Perform constraint checking (energy, grid) and assign penalty/rewards.
 	        Output: reward/penalty, next state, constraint satisfaction (boolean)
 	        '''
-	        #print("the action sequences are ",action_sequence)
-	        print ('Action sequences for nextstep', action_sequence)
-		lastState,cumulativeReward= self.getCumulativeReward(episode_number, time_step, k, action_sequence)
-		print("current state before update,action,episode_number",self.currentState,action_sequence[0],episode_number)
-	        self.currentState, reward, isValid = self.getNextState(episode_number, time_step, self.currentState, action_sequence[0])
-	        print("current state after update",self.currentState)
-	        qValueLastState = FA.predictQvalue(lastState, agent, agent.getLegalActions(lastState) )
-		return self.currentState, cumulativeReward + (self.Gamma**3)*qValueLastState, isValid
+		cumulativeReward, lastState = self.getCumulativeReward(time_step, k, action_sequence)
+	        self.currentState, reward, isValid = self.getNextState(time_step, self.currentState, action_sequence[0])
+	        qValueLastState = FA.predictQvalue(lastState, agent.getLegalActions(lastState, self))
+		return currentState, cumulativeReward + (self.Gamma**3)*qValueLastState, isValid
 	
-	def getCumulativeReward(self, episode_number, time_step, k, actions) :
-		#print("actions in cumulativeReward",actions)
+	def getCumulativeReward(self, time_step, k, actions) :
 		gamma = 1
-		state = deepcopy(self.currentState)
+		state = deepcopy(currentState)
 		cr = 0
 		for i in range(0, k) :
-			#print("actions in get nextstate",actions)			
-			state, reward, isValid = self.getNextState(episode_number, time_step, state, actions[i])
+			state, reward, isValid = getNextState(time_step, state, actions[i])
 			time_step += 1
-			if(isValid) :
+			if(not isValid) :
 				return None
 			cr += gamma*reward 
 			gamma *= self.Gamma
-
 		return state, cr # target = (R1 + gamma*R2 + gamma2*Qmax
 	
-	def getNextState(self, episode_number, time_step, state_k, action_k) :
-		#print "state in getNextState",state_k
+	def getNextState(self, time_step, state_k, action_k) :
+	
 		current_netload = state_k[0]
         	current_energy = state_k[1]
 		
@@ -71,13 +61,10 @@ class Environment :
 	        E_next = current_energy + self.eta * P_charge + P_discharge
 	        P_grid = current_netload + P_charge + P_discharge
 		isValid = (P_grid < 0)
-		reward  = -P_grid*self.getPrice(time_step)
-		if isValid:
-			reward=-100
-
-		nextState = [self.getNetload(episode_number, time_step+1), E_next, self.getPrice(time_step)]
-		#print "nextstate after ",nextState
-		return nextState, reward, isValid
+		reward  = -P_grid*self.get_price(time_step)
+			
+		nextState = (P_grid, E_next)
+		return (nextState, reward, isValid)
 	
 	
 	def getMaxQvalue(self, state, agent) :
@@ -96,14 +83,14 @@ class Environment :
 					optimalAction=action
         	return [optimalAction], QValue
 	
-	def getNetload(self, episode_number, timeStep) :
+	def getNetload(self, timeStep) :
 		"change here by Siddharth "
-		return self.net_load[episode_number][timeStep]
+		return net_load[timeStep-1]
 
 	
 	def getPrice(self, timeStep) :
 		price = [.040,.040,.040,.040,.040,.040,.080,.080,.080,.080,.040,.040,.080,.080,.080,.040,.040,.120,.120,.040,.040,.040,.040,.040]
-		return price[timeStep]
+		return price[timeStep-1]
 		
 	
 	

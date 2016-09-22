@@ -28,7 +28,6 @@ class FunctionApproximation:
 
 		elif self.model_name == 'svr':
 			self.model = SVR(kernel='rbf', C=1e3, gamma=0.1)
-			self.model.fit(np.array([2.3, 3.5, 0.040, 1.00]).reshape(1,4), np.array([0.0]).reshape(1,-1))
 		else:
 			self.model = None
 
@@ -80,18 +79,13 @@ class FunctionApproximation:
         #stateaction = numpy.zeros((len(self.actions), len(state)))
         #stateaction[action,:] = state
 		qvalues = []
-		print 'in predictQvalue ' + str(state)
 
 		for action_index in legal_actions:
 			action = agent_instance.actions[action_index]
-			print action,"are the actions"
-			features=state+[action]
-			features = np.array(features).reshape(1,4)
-			print state
+			features = np.asarray(state.append(action))
 			prediction = self.model.predict(features)
-			qvalues.append(prediction)
-
-		return np.max(qvalues)
+			qvalues.append(prediciton)
+		return qvalues.max()
 
 	def update_qfunction(self, minibatch, agent_instance):
 		'''
