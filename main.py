@@ -5,65 +5,127 @@ import random
 from environment import Environment
 from learningAgent import LearningAgent
 from function_approximation import FunctionApproximation
+from copy import deepcopy
+import matplotlib.pyplot as plt
+import seaborn as sns
+import cPickle as pickle
 
+'''
+To-Do:
+
+- Diagnostic Class: Write a plotting routine/class for accumulated rewards/bill
+	+ 
+	+
+	+ 
+- Assess learning: What is the behaviour of the optimal policy? Do the rewards converge? 
+- Initilization: Is learning sensitive to initialization/training of SVC model? 
+- Function Approx: Batch-size, update and models (Random Forests, Kernel Regression etc)
+- RL hyperparameters: Exploration annealing effect, gamma etc. 
+
+'''
 
 def main():
-	gamma = 0.9
-	eta = 0.9
-	day_chunk = 15
-	total_years = 500
+	isTrainingOn=True 
+	gamma = 0.89 
+	eta = 0.9 
+	day_chunk = 15 
+	total_years = 1000
 	episode_number = 0
 	E_cap = 6.0
-	P_cap = 3.3
+	P_cap = 3.0
 	E_init = 0.3*E_cap
 	epsilon = 0.5
-	actions = np.arange(-P_cap, P_cap, 0.5)
+	actions = np.arange(-P_cap, P_cap + 0.01, 0.50).tolist()
+	actions.sort()
 	total_number_hours = 24
-	look_ahead = 2
-	batch = []
-	miniBatchSize = 50
-	bufferLength = 100
-	reward_plot = None #object for plotting class
+	look_ahead = 0
 
-	#creation of objects
+	batch = []
+	
+	miniBatchSize = 500
+	bufferLength = 1000
+	lasting_list = []
+	grid_list = []
+	reward_list = []
+	action_list = []
+	
+	#Creation of objects
 	environment = Environment(gamma, eta, day_chunk, total_years)
 	environment.setCurrentState(episode_number, E_init)
 	learningAgent = LearningAgent(environment.currentState, actions, E_cap, P_cap, epsilon)
 	funtionApproximator = FunctionApproximation('svr')
 
 	#starting main episode loop
-	total_iterations = day_chunk*total_years
-
-	print total_iterations
+	total_iterations = total_years * day_chunk #day_chunk*total_years
 
 	while(episode_number < total_iterations) :
+		lasting = 1
 
-		print episode_number
+		#print (episode_number)
 		for time in range(total_number_hours) :
+			
+			'''
+			Change in for loop by Siddharth: 
+			1. Added exploration function in learningAgent.py
+			2. Corrected isValid condition
+			3. lasting_list : contains the time_steps upto which the agent reaches until failure (P_grid < 0)
+			4. Edited nextStep in environment (currentState update)
+			'''
 
-			print time
-			action_sequence, rewardCumulative = learningAgent.getAction(learningAgent.currentState, funtionApproximator, environment, look_ahead, gamma, time)
-			currentStateBackup = environment.currentState
-			nextState, qvalue, isValid = environment.nextStep(time, action_sequence, look_ahead, funtionApproximator, learningAgent)
-			batch.append([currentStateBackup, action_sequence[0], qvalue])
+			K = look_ahead
+			
+			if np.random.random() <= learningAgent.epsilon: 
+				currentStateBackup = deepcopy(learningAgent.currentState)
+				#print 'Acting randomly', currentStateBackup
+				K = 0
+				action_sequence, rewardCumulative = learningAgent.exploration(episode_number, time, environment, 0)
+			else:
+				currentStateBackup = deepcopy(learningAgent.currentState)
+				#print 'Acting thoughtfully', currentStateBackup
+				action_sequence, rewardCumulative = learningAgent.getAction(episode_number, learningAgent.currentState, funtionApproximator, environment, look_ahead, gamma, time)
+			
+			nextState, qvalue, isValid = environment.nextStep(episode_number, time, [learningAgent.actions[action_index] for action_index in action_sequence], K, funtionApproximator, learningAgent)
+			action_taken = learningAgent.actions[action_sequence[0]]
+
+			#print('Episode', episode_number, 'current', currentStateBackup, 'action', action_taken,'next', nextState)
+			
+			#Experience Tuple
+			currentStateBackup.append(action_taken) #indexed the actions to change experience tuple
+			batch.append((currentStateBackup, qvalue))
+			grid_list.append(environment.getP_grid(environment.currentState, action_sequence[0]))
+			action_list.append(action_taken)
 
 			if(len(batch) >= bufferLength) :
 				miniBatch = random.sample(batch, miniBatchSize)
-				learningAgent.update_qfunction(miniBatch, learningAgent)
+				funtionApproximator.update_qfunction(miniBatch, learningAgent)
 				batch = []
-				learningAgent.currentState = nextState
+			
+			if(isValid) :
+				episode_number += 1
+				temp = environment.setCurrentState(episode_number, E_init)
+				learningAgent.currentState = temp
+				break
 
-				if(not isValid) :
-				#reward_plot.something
-					break
+			learningAgent.currentState = nextState
+			lasting += 1
 
-		#Annealing of epsilon
-	learningAgent.epsilon -= 1/iterations  
+		if (learningAgent.epsilon >= 0.0):
+			learningAgent.epsilon -= 1/total_iterations
 
-    	if learningAgent.alpha <= 0.10: #Annealing alpha
-    		learningAgent.alpha *= 0.993
+		if(episode_number%500 == 0) :
+			print ("done with episode number = " + str(episode_number))
+			print ("lasted days = ", len([1 for x in lasting_list if x >= 24]))
+		episode_number += 1
+		lasting_list.append(lasting)
+		#reward_list.append(rewardCumulative)
+		
+	plt.plot(grid_list)
+	plt.xlabel('Grid value')
+	plt.ylabel('Training Episodes')
+	plt.show()
+	with open('model_store','w') as fp:
+		pickle.dump(funtionApproximator.model, fp)
 
-    	environment.setCurrentState(episode_number, E_init)
 
 if __name__ == '__main__' :
     	main()
