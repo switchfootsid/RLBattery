@@ -99,7 +99,7 @@ class Environment :
 		reward  = - P_grid*self.getPrice(time_step)
 		
 		if isValid:
-			reward=-100
+			reward=-10
 
 		price = self.getPrice(time_step)
 		nextState = [self.getNetload(episode_number, time_step+1), E_next, price]

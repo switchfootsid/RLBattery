@@ -2,6 +2,9 @@ import numpy as np
 from sklearn import linear_model
 from sklearn.svm import SVR
 from sklearn import tree
+from sklearn.linear_model import SGDRegressor
+from sklearn.preprocessing import MinMaxScaler, StandardScaler
+from sklearn.utils import shuffle
 
 class FunctionApproximation:
     '''
@@ -18,18 +21,23 @@ class FunctionApproximation:
     def __init__(self, name):
         self.debug = True
         self.model_name = str(name)
+        self.feature_scaler = StandardScaler().fit([3, 3.80, 0.40, 1.50])
+        self.qval_scaler = StandardScaler().fit([-1.0])
         #self.model = model
         #self.kernel = str(kernel)
 
-        if self.model_name == 'linear':
-            self.model = linear_model.LinearRegression()
+        if self.model_name == 'svr':
+            self.model = SVR()
+            self.model.fit(np.array([3, 3.80, 0.40, 1.50]).reshape(1,4), np.array([-1.0]).reshape(1,-1))
+
 
         elif self.model_name == 'ridge':    
             self.model = linear_model.Ridge(alpha='l2')
 
-        elif self.model_name == 'svr':
-            self.model = SVR(kernel='rbf', C=1e3, gamma=0.1)
-            self.model.fit(np.array([2.3, 1.3, 0.040, 1.00]).reshape(1,4), np.array([-1.5]).reshape(1,-1))
+        elif self.model_name == 'sgd':
+            self.model = SGDRegressor(penalty='none')
+            self.model.fit(self.feature_scaler.transform(np.array([3, 3.80, 0.40, 1.50])).reshape(1,4), 
+                            self.qval_scaler.transform(np.array([-1.0])).reshape(1,-1))
         else:
             self.model = None
 
@@ -82,20 +90,18 @@ class FunctionApproximation:
             #stateaction[action,:] = state
         qvalues = []
 
-        if self.debug and len(legal_actions)==0:
-                    file=open('debug.txt','a')
-                    file.write('legalActions should not be empty in getAction in LearningAgent.py.......\n')
-                    file.write(" state = " + str(state) + "\n") 
-                    file.close()
         #print 'in predictQvalue ' + str(state)
         #print("legal_actions in fa are",legal_actions)
 
         for action_index in legal_actions:
             action = agent_instance.actions[action_index]
-            features=state+[action]
+            features = state +[action]
             features = np.array(features).reshape(1,4)
+            features_scaled = self.feature_scaler.transform(features)
+            
             #print state
-            prediction = self.model.predict(features)
+            #prediction = self.model.predict(features)
+            prediction = self.model.predict(features_scaled)
             qvalues.append(prediction[0].tolist())
 
         if len(qvalues) == 0:
@@ -103,6 +109,7 @@ class FunctionApproximation:
         return np.max(qvalues)
 
     def update_qfunction(self, minibatch, agent_instance):
+        print 'Weights before update',self.model.coef_
         '''
         Fits the Q_function or the regression model to the experience or batch.
 
@@ -155,5 +162,14 @@ class FunctionApproximation:
         X_train = np.array(X_train)
         y_train = np.array(y_train)
 
+        #Shuffling for stochastic gradient descent and breaking correlations
+        X_train, y_train = shuffle(X_train, y_train)
+
+        #Standardize the features
+        X_scaled = self.feature_scaler.fit_transform(X_train)
+        y_scaled = self.qval_scaler.fit_transform(y_train)
+
+        
         #Now update the model or Q-function
-        self.model.fit(X_train, y_train)
+        self.model.partial_fit(X_scaled, y_scaled)
+        #self.model.fit(X_train, y_train)

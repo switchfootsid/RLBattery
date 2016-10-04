@@ -9,6 +9,9 @@ from copy import deepcopy
 import matplotlib.pyplot as plt
 import seaborn as sns
 import cPickle as pickle
+import warnings
+warnings.filterwarnings('ignore')
+
 
 '''
 To-Do:
@@ -29,7 +32,7 @@ def main():
 	gamma = 0.89 
 	eta = 0.9 
 	day_chunk = 15 
-	total_years = 1000
+	total_years = 100
 	episode_number = 0
 	E_cap = 6.0
 	P_cap = 3.0
@@ -42,8 +45,8 @@ def main():
 
 	batch = []
 	
-	miniBatchSize = 500
-	bufferLength = 1000
+	miniBatchSize = 200
+	bufferLength = 500
 	lasting_list = []
 	grid_list = []
 	reward_list = []
@@ -53,7 +56,7 @@ def main():
 	environment = Environment(gamma, eta, day_chunk, total_years)
 	environment.setCurrentState(episode_number, E_init)
 	learningAgent = LearningAgent(environment.currentState, actions, E_cap, P_cap, epsilon)
-	funtionApproximator = FunctionApproximation('svr')
+	funtionApproximator = FunctionApproximation('sgd')
 
 	#starting main episode loop
 	total_iterations = total_years * day_chunk #day_chunk*total_years
@@ -79,21 +82,24 @@ def main():
 				#print 'Acting randomly', currentStateBackup
 				K = 0
 				action_sequence, rewardCumulative = learningAgent.exploration(episode_number, time, environment, 0)
+				#print 'random', rewardCumulative
 			else:
 				currentStateBackup = deepcopy(learningAgent.currentState)
 				#print 'Acting thoughtfully', currentStateBackup
 				action_sequence, rewardCumulative = learningAgent.getAction(episode_number, learningAgent.currentState, funtionApproximator, environment, look_ahead, gamma, time)
-			
+				#print 'thoughtful', rewardCumulative
+				action_list.append(learningAgent.actions[action_sequence[0]])
 			nextState, qvalue, isValid = environment.nextStep(episode_number, time, [learningAgent.actions[action_index] for action_index in action_sequence], K, funtionApproximator, learningAgent)
 			action_taken = learningAgent.actions[action_sequence[0]]
 
+			#print qvalue, action_taken
 			#print('Episode', episode_number, 'current', currentStateBackup, 'action', action_taken,'next', nextState)
 			
 			#Experience Tuple
 			currentStateBackup.append(action_taken) #indexed the actions to change experience tuple
 			batch.append((currentStateBackup, qvalue))
 			grid_list.append(environment.getP_grid(environment.currentState, action_sequence[0]))
-			action_list.append(action_taken)
+			#action_list.append(action_taken)
 
 			if(len(batch) >= bufferLength) :
 				miniBatch = random.sample(batch, miniBatchSize)
@@ -111,16 +117,17 @@ def main():
 
 		if (learningAgent.epsilon >= 0.0):
 			learningAgent.epsilon -= 1/total_iterations
-
+		'''
 		if(episode_number%500 == 0) :
 			print ("done with episode number = " + str(episode_number))
 			print ("lasted days = ", len([1 for x in lasting_list if x >= 24]))
+		'''
 		episode_number += 1
 		lasting_list.append(lasting)
 		#reward_list.append(rewardCumulative)
 		
-	plt.plot(grid_list)
-	plt.xlabel('Grid value')
+	plt.plot(action_list)
+	plt.xlabel('Action value')
 	plt.ylabel('Training Episodes')
 	plt.show()
 	with open('model_store','w') as fp:

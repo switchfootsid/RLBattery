@@ -58,6 +58,7 @@ def main():
 			action_sequence, rewardCumulative = learningAgent.getAction(episode_number, environment.currentState, funtionApproximator, environment, look_ahead, gamma, time)
 			nextState, qvalue, isValid = environment.nextStep(episode_number, time, [learningAgent.actions[action_index] for action_index in action_sequence], look_ahead, funtionApproximator, learningAgent)
 			action_taken = learningAgent.actions[action_sequence[0]]
+			print action_taken
 
 
 			#print('Episode', episode_number, 'current', learningAgent.currentState, 'action', action_taken,'next', nextState)
