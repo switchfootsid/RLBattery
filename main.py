@@ -12,7 +12,6 @@ import cPickle as pickle
 import warnings
 warnings.filterwarnings('ignore')
 
-
 '''
 To-Do:
 
@@ -38,15 +37,15 @@ def main():
 	P_cap = 3.0
 	E_init = 0.3*E_cap
 	epsilon = 0.5
-	actions = np.arange(-P_cap, P_cap + 0.01, 0.50).tolist()
-	actions.sort()
+	actions = np.arange(-P_cap, P_cap + 0.01, 0.25).tolist()
+	#actions.sort()
 	total_number_hours = 24
 	look_ahead = 0
 
 	batch = []
 	
-	miniBatchSize = 200
-	bufferLength = 500
+	miniBatchSize = 100
+	bufferLength = 200
 	lasting_list = []
 	grid_list = []
 	reward_list = []
@@ -56,7 +55,7 @@ def main():
 	environment = Environment(gamma, eta, day_chunk, total_years)
 	environment.setCurrentState(episode_number, E_init)
 	learningAgent = LearningAgent(environment.currentState, actions, E_cap, P_cap, epsilon)
-	funtionApproximator = FunctionApproximation('sgd')
+	funtionApproximator = FunctionApproximation('extra_trees')
 
 	#starting main episode loop
 	total_iterations = total_years * day_chunk #day_chunk*total_years
@@ -89,6 +88,7 @@ def main():
 				action_sequence, rewardCumulative = learningAgent.getAction(episode_number, learningAgent.currentState, funtionApproximator, environment, look_ahead, gamma, time)
 				#print 'thoughtful', rewardCumulative
 				action_list.append(learningAgent.actions[action_sequence[0]])
+			
 			nextState, qvalue, isValid = environment.nextStep(episode_number, time, [learningAgent.actions[action_index] for action_index in action_sequence], K, funtionApproximator, learningAgent)
 			action_taken = learningAgent.actions[action_sequence[0]]
 
@@ -98,7 +98,7 @@ def main():
 			#Experience Tuple
 			currentStateBackup.append(action_taken) #indexed the actions to change experience tuple
 			batch.append((currentStateBackup, qvalue))
-			grid_list.append(environment.getP_grid(environment.currentState, action_sequence[0]))
+			grid_list.append(environment.getP_grid(currentStateBackup, action_taken))
 			#action_list.append(action_taken)
 
 			if(len(batch) >= bufferLength) :
@@ -106,7 +106,7 @@ def main():
 				funtionApproximator.update_qfunction(miniBatch, learningAgent)
 				batch = []
 			
-			if(isValid) :
+			if (isValid) :
 				episode_number += 1
 				temp = environment.setCurrentState(episode_number, E_init)
 				learningAgent.currentState = temp
@@ -117,22 +117,22 @@ def main():
 
 		if (learningAgent.epsilon >= 0.0):
 			learningAgent.epsilon -= 1/total_iterations
-		'''
+		
 		if(episode_number%500 == 0) :
 			print ("done with episode number = " + str(episode_number))
 			print ("lasted days = ", len([1 for x in lasting_list if x >= 24]))
-		'''
+		
 		episode_number += 1
-		lasting_list.append(lasting)
-		#reward_list.append(rewardCumulative)
+		reward_list.append(rewardCumulative)
 		
 	plt.plot(action_list)
+	plt.plot(grid_list)
 	plt.xlabel('Action value')
 	plt.ylabel('Training Episodes')
 	plt.show()
+	
 	with open('model_store','w') as fp:
 		pickle.dump(funtionApproximator.model, fp)
-
 
 if __name__ == '__main__' :
     	main()

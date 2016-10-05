@@ -66,14 +66,14 @@ class LearningAgent:
                 file.close()
             '''
              flag=0             
-             Qvalues=[(legalActions[i], model.predictQvalue(state,self,[j])) for i,j in enumerate(legalActions)]
-             QValue=Qvalues[0][1]
+             Qvalues =[(legalActions[i], model.predictQvalue(state,self,[j])) for i,j in enumerate(legalActions)]
+             QValue = Qvalues[0][1]
              optimalAction=Qvalues[0][0]
              for a,q in Qvalues:
                 if q > QValue:
-                    optimalAction=a
-                    QValue=q 
-             return [optimalAction],gama*QValue
+                    optimalAction = a
+                    QValue = q 
+             return [optimalAction], gama*QValue
          else:
              legalActions=self.getLegalActions(state)  #check this
              optimalReward=None

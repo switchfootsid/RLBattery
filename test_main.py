@@ -9,11 +9,13 @@ from copy import deepcopy
 import matplotlib.pyplot as plt
 import seaborn as sns
 import cPickle as pickle
+import warnings
+warnings.filterwarnings('ignore')
 
 def main():
 	gamma = 0.89 
 	eta = 0.9 
-	day_chunk = 15 
+	day_chunk = 1 
 	total_years = 1 
 	episode_number = 0
 	E_cap = 6.0
@@ -34,6 +36,9 @@ def main():
 	reward_list = list()
 	action_list = list()
 	energy_list = list()
+	grid_list = list()
+	load_list = list()
+	load_action_list = list()
 
 	#Creation of objects
 	with open('model_store') as fp:
@@ -44,39 +49,45 @@ def main():
 	environment.setCurrentState(episode_number, E_init)
 	learningAgent = LearningAgent(environment.currentState, actions, E_cap, P_cap, epsilon)
 	funtionApproximator = FunctionApproximation('svr')
-	print funtionApproximator.model,
 	funtionApproximator.model = model
-	print (funtionApproximator.model)
+	
 	#starting main episode loop
 	total_iterations = total_years * day_chunk #day_chunk*total_years
 
 	while(episode_number < total_iterations) :
-		lasting = 1
+		
 		for time in range(total_number_hours) :
+			
 			energy_list.append(learningAgent.currentState[1])
 
 			action_sequence, rewardCumulative = learningAgent.getAction(episode_number, environment.currentState, funtionApproximator, environment, look_ahead, gamma, time)
+			copy_current = deepcopy(environment.currentState)
 			nextState, qvalue, isValid = environment.nextStep(episode_number, time, [learningAgent.actions[action_index] for action_index in action_sequence], look_ahead, funtionApproximator, learningAgent)
 			action_taken = learningAgent.actions[action_sequence[0]]
 			print action_taken
 
 
 			#print('Episode', episode_number, 'current', learningAgent.currentState, 'action', action_taken,'next', nextState)
-			grid_list.append(environment.getP_grid(environment.currentState, action_sequence[0]))
+			grid_list.append(environment.getP_grid(copy_current, action_taken))
 			action_list.append(action_taken)
+			load_list.append(learningAgent.currentState[0])
+			load_action_list.append(action_taken+learningAgent.currentState[0])
 
 			learningAgent.currentState = nextState
-			lasting += 1
 
 		if(episode_number%100 == 0) :
 			print ("done with episode number = " + str(episode_number))
 			#print ("lasted days = ", len([1 for x in lasting_list if x >= 24]))
 		
 		episode_number += 1
-		lasting_list.append(lasting)
 		reward_list.append(rewardCumulative)
 		
-	plt.plot(grid_list)
+	plt.plot(grid_list, label='Grid')
+	#plt.plot(energy_list, label='Energy Level')
+	plt.plot(load_list, label='Load')
+	plt.plot(action_list, label='Actions')
+	plt.legend(loc=1, mode="expand", borderaxespad=0.)
+
 	plt.xlabel('Hours')
 	plt.ylabel('Grid')
 	plt.show()

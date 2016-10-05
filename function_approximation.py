@@ -3,6 +3,7 @@ from sklearn import linear_model
 from sklearn.svm import SVR
 from sklearn import tree
 from sklearn.linear_model import SGDRegressor
+from sklearn.ensemble import ExtraTreesRegressor 
 from sklearn.preprocessing import MinMaxScaler, StandardScaler
 from sklearn.utils import shuffle
 
@@ -27,17 +28,17 @@ class FunctionApproximation:
         #self.kernel = str(kernel)
 
         if self.model_name == 'svr':
-            self.model = SVR()
-            self.model.fit(np.array([3, 3.80, 0.40, 1.50]).reshape(1,4), np.array([-1.0]).reshape(1,-1))
+            self.model = SVR(kernel='rbf')
+            self.model.fit(np.array([3, 3.80, 0.40, 1.50]), np.array([-1.0]))
 
 
-        elif self.model_name == 'ridge':    
-            self.model = linear_model.Ridge(alpha='l2')
+        elif self.model_name == 'extra_trees':    
+            self.model = ExtraTreesRegressor().fit(np.array([3, 3.80, 0.40, 1.50]), np.array([-1.0]))
 
         elif self.model_name == 'sgd':
             self.model = SGDRegressor(penalty='none')
-            self.model.fit(self.feature_scaler.transform(np.array([3, 3.80, 0.40, 1.50])).reshape(1,4), 
-                            self.qval_scaler.transform(np.array([-1.0])).reshape(1,-1))
+            self.model.fit(self.feature_scaler.transform(np.array([3, 3.80, 0.40, 1.50])), 
+                            self.qval_scaler.transform(np.array([-1.0])))
         else:
             self.model = None
 
@@ -96,12 +97,13 @@ class FunctionApproximation:
         for action_index in legal_actions:
             action = agent_instance.actions[action_index]
             features = state +[action]
-            features = np.array(features).reshape(1,4)
+            features = np.array(features)  
+            #print features          
             features_scaled = self.feature_scaler.transform(features)
             
             #print state
-            #prediction = self.model.predict(features)
-            prediction = self.model.predict(features_scaled)
+            prediction = self.model.predict(features)
+            #prediction = self.model.predict(features_scaled)
             qvalues.append(prediction[0].tolist())
 
         if len(qvalues) == 0:
@@ -109,7 +111,7 @@ class FunctionApproximation:
         return np.max(qvalues)
 
     def update_qfunction(self, minibatch, agent_instance):
-        print 'Weights before update',self.model.coef_
+        #print 'Weights before update',self.model.coef_
         '''
         Fits the Q_function or the regression model to the experience or batch.
 
@@ -171,5 +173,6 @@ class FunctionApproximation:
 
         
         #Now update the model or Q-function
-        self.model.partial_fit(X_scaled, y_scaled)
-        #self.model.fit(X_train, y_train)
+        #self.model.partial_fit(X_scaled, y_scaled)
+        self.model.fit(X_train, y_train)
+        
