@@ -2,152 +2,174 @@ import numpy as np
 from sklearn import linear_model
 from sklearn.svm import SVR
 from sklearn import tree
+from sklearn.linear_model import SGDRegressor
+from sklearn.ensemble import ExtraTreesRegressor 
+from sklearn.preprocessing import MinMaxScaler, StandardScaler
+from sklearn.utils import shuffle
+from sklearn.kernel_approximation import RBFSampler
+import sklearn.pipeline
+
 
 class FunctionApproximation:
-	'''
-	Training algorithm: Variety of algorithms (linear, ridge, tree based, kernelized) used for representing the Q(s,a). 
+    '''
+    Training algorithm: Variety of algorithms (linear, ridge, tree based, kernelized) used for representing the Q(s,a). 
 
-    	Feature Extraction: Construct kernelized features (RBF, Fourier etc) from state variables for capturing non-linearity
+    Feature Extraction: Construct kernelized features (RBF, Fourier etc) from state variables for capturing non-linearity
 
-   	Batches: FittedQIteration alternates between constructing batches of experience and then fitting the Q-function.
+    Batches: FittedQIteration alternates between constructing batches of experience and then fitting the Q-function.
 
-   	Note: parameters/weights correspond to the chosen action in the given state
+    Note: parameters/weights correspond to the chosen action in the given state
 
-	'''
+    '''
 
-	def __init__(self, name):
-		self.model_name = str(name)
-		#self.model = model
-		#self.kernel = str(kernel)
+    def __init__(self, name, actions):
+        self.debug = True
+        self.actions = actions
+        self.initial_data = np.array([[3, 3.80, 0.40, 1.50], [3.0783744000000004, 1.7999999999999998, 0.04, 2.5], 
+                                    [3.6603792000000004, 5.8500000000000005, 0.08, -1.5], [2.8383936000000003, 5.8500000000000005, 0.04, -3.0],
+                                    [4.5679104000000015, 5.8500000000000005, 0.04, -2.0], [2.885976, 4.05, 0.04, 1.0]])
 
-		if self.model_name == 'linear':
-			self.model = linear_model.LinearRegression()
+        self.initial_labels = np.array([[-1.0], [-0.2], [-0.5], [-.25], [0.0], [-2.1]])
+        self.model_name = str(name)
+        self.observation_samples = np.array([self.sample_states() for obv in range(10000)])
+        self.featurizer = sklearn.pipeline.FeatureUnion([("rbf1", RBFSampler(gamma=5.0, n_components=100)),
+                                                         ("rbf2", RBFSampler(gamma=2.0, n_components=100)),
+                                                         ("rbf3", RBFSampler(gamma=1.0, n_components=100)),
+                                                         ("rbf4", RBFSampler(gamma=0.5, n_components=100))])
+        self.featurizer.fit(self.observation_samples)
+        self.feature_scaler = StandardScaler()
+        self.feature_scaler.fit(self.observation_samples)
 
-		elif self.model_name == 'ridge':	
-			self.model = linear_model.Ridge(alpha='l2')
+        if self.model_name == 'svr':
+                self.model = SVR(kernel='rbf')
+                #self.model.fit(self.initial_data, self.initial_labels)
 
-		elif self.model_name == 'svr':
-			self.model = SVR(kernel='rbf', C=1e3, gamma=0.1)
-			self.model.fit(np.array([2.3, 3.5, 0.040, 0.00]).reshape(1,4), np.array([0.0]).reshape(1,-1))
-		else:
-			self.model = None
+        elif self.model_name == 'extra_trees':    
+                self.model = ExtraTreesRegressor().fit(self.initial_data, self.initial_labels)
 
-	def feature_extraction(self, state, action):
-		'''
-		* NOT USING currently *
-		- Return a basis or prjection of variable into high dimensional space, kernelize features. 
-		- This is similar to Tile Coding or RBF networks. 
+        elif self.model_name == 'sgd':
+            self.models = {}
+            for a in range(len(self.actions)):
+                model = SGDRegressor(learning_rate="constant")
+                model.partial_fit([ self.featurize_state([3.6603792000000004, 2.8500000000000005, 0.08]) ], [0])
+                self.models[a] = model
+            #self.model = SGDRegressor(penalty='none')
+            #self.model.fit(self.feature_scaler.transform(self.initial_data), self.initial_labels)
+        else:
+            self.model = None
 
-		param state: state variables
-		param action: chosen action
+    def sample_states(self):
+        '''
+        state = [netload, energy, price]
+        '''
+        load_sample = np.random.uniform(low=-2.6, high=6.0)
+        energy_sample = np.random.uniform(low=1.7, high=6.0)
+        price_sample = np.random.uniform(low=0.0, high=0.12)
+        sample = [load_sample, energy_sample, price_sample]
+        return sample
 
-		returns: features/basis vectors for state variables
+    def featurize_state(self, state):
+        '''
+        1. Normalize the observation/state-space with zero mean and unit variance.
+        2. Return RBF kernelzied features #CHECK SUTTON BARTO SECTION for intuition
+        '''
+        scaled = self.feature_scaler.transform(state)
+        featurized = self.featurizer.transform(scaled)
+        return featurized[0]
+    
+    def update_qfunction(self, state, action_index, qvalue):
+            features = self.featurize_state(state)
+            self.models[action_index].partial_fit([features], [qvalue])
+            return None
+    '''
+    def update_qfunction(self, minibatch, agent_instance):
+        #Update the model/estimator/FA for each action.
+        minibatch = np.array(minibatch) # (netload, energy, price, qvalue, action_index)
+        groups = np.split(minibatch, np.where(np.diff(minibatch[:,4]))[0]+1) #returns a list with group of array elements
+        actions = np.unique([x[0][4]for x in groups]) # unqiue actions
+        print len(actions)
+        for i, action_index in enumerate(actions):
+            features = self.featurize_state(groups[i][:,:3])
+            qvalue = groups[i][:,3:4]
+            #print 'features', features.shape
+            #print 'qvalues', qvalue
+            #print 'obvs', self.observation_samples.shape
+            self.models[action_index].partial_fit([features], qvalue)
+    '''
+    def predictQvalue(self, state, agent_instance, legal_actions):
 
-		'''
+            features = self.featurize_state(state)
+            #print'predict', features.shape
+            if len(legal_actions) != 1:
+                pred = np.array([ self.models[key].predict([features])[0] for key in legal_actions])
+                return np.max(pred)
+            else:
+                key = legal_actions[0]
+                return self.models[key].predict([features])[0]
+'''
+    def predictQvalue(self, state, agent_instance, legal_actions):
 
-		if kernel == 'rbf':
-			features = self.RBF_features(state)
-			stateaction = np.zeros((self.actions, len(state)))
-			stateaction[action,:] = state
-			return stateaction.flatten()
+            #stateaction = numpy.zeros((len(self.actions), len(state)))
+            #stateaction[action,:] = state
+        qvalues = []
 
-		elif kernel == 'tile_coding':
-			features = self.CMAC_features(state)
-		else:
-			features = state
+        if len(legal_actions) == 1: 
+            action_index = legal_actions[0]
+            action = agent_instance.actions[action_index]
+            features = state + [action]
+            features = np.array(features)  
+            features_scaled = self.feature_scaler.transform(features)
+            qvalue = self.model.predict(features)
+            #qvalue = self.model.predict(features_scaled)
+            return qvalue[0]
 
-		return features
+        else:
+            #print 'not inside 1:', len(legal_actions)
+            for action_index in legal_actions:
+                action = agent_instance.actions[action_index]
+                features = state + [action]
+                features = np.array(features)  
+                features_scaled = self.feature_scaler.transform(features)
+                prediction = self.model.predict(features)
+                #prediction = self.model.predict(features_scaled)
+                qvalues.append(prediction[0].tolist())
+                
+                if len(qvalues) == 0:
+                    print 'Zero length, state', state
+            
+            return np.max(qvalues)
 
-	def CMAC_features(self, state, action):
-		'''
-		* NOT USING CURRENTLY * 
-		- Copy code from Rich Sutton's website.
-		state: state variables
-		return: number of on tiles for the state space.
-		'''
-		pass
+    def update_qfunction(self, minibatch, agent_instance):
+        #print 'Weights before update',self.model.coef_
+     
+        X_train = [] #features (states? actions? both?)
+        y_train = [] #qvalues
 
-	def predictQvalue(self, state, agent_instance, legal_actions):
-		'''
-		- Get the best Q-value function for the greedy action in State 
+        #Loop through the batch and create the training set.
 
-		param state: state variables (currentState, nextState)
-		param legal_actions: set of actions allowed in the state
+        for memory in minibatch:
 
-		return: maxQ(state, a) for a in legal_actions.
-		'''
+            currentStateAction, kQvalue = memory
 
-        #stateaction = numpy.zeros((len(self.actions), len(state)))
-        #stateaction[action,:] = state
-		qvalues = []
-		print 'in predictQvalue ' + str(state)
+            #Get prediction of Q(currentState, currentAaction)
+            #Ideally input features???
+            
+            X_train.append(np.asarray(currentStateAction))
+            y_train.append(np.asarray(kQvalue))
 
-		for action_index in legal_actions:
-			action = agent_instance.actions[action_index]
-			print action,"are the actions"
-			features=state+[action]
-			features = np.array(features).reshape(1,4)
-			print state
-			prediction = self.model.predict(features)
-			qvalues.append(prediction)
+        X_train = np.array(X_train)
+        y_train = np.array(y_train).reshape(400,1)
+        #print X_train.shape, y_train.shape
 
-		return np.max(qvalues)
+        #Shuffling for stochastic gradient descent and breaking correlations
+        X_train, y_train = shuffle(X_train, y_train)
+        #print X_train, y_train
 
-	def update_qfunction(self, minibatch, agent_instance):
-		'''
-		Fits the Q_function or the regression model to the experience or batch.
-
-		- Minibatch: (state_action_features, Q_targets) Vs (S, A, R, S1)
-		
-		param minibatch: random sample of a experience/batch. 
-		param agent_instance = agent object for accessing methods. 
-		return: None
-		'''
-		X_train = [] #features (states? actions? both?)
-		y_train = [] #qvalues
-
-		#Loop through the batch and create the training set.
-
-		for memory in minibatch:
-			#get the stored values first.
-
-			#currentState, currentAction, reward, nextState, kState = memory # currentState, kQvalue
-			currentState, kQvalue = memory
-
-			#Get prediction of Q(currentState, currentAaction)
-			#Ideally input features???
-
-			if reward == -100:
-			#conditonal checking for invalid state
-				target = reward 
-			else: 
-		
-				legal_next_actions = agent_instance.get_legal_actions(nextState)
-			
-				next_qvals = [] #defaultdict or np.zeros ?????
-				
-				'''
-				for action_index in legal_next_actions:
-					##How to represent actions? Index or Numerical? 
-					action = agent_instance.actions[action_index]
-					features = np.asarray(currentState.append(action))
-					new_qval = self.model.predict(features)
-					next_qvals.append(new_qval)
-					https://github.com/switchfootsid/RLBattery.git
-				best_qval = next_qvals.max()
-				'''
-				
-				target = reward + agent_instance.gamma * kQvalue
-
-			currentSA = currentState.append(action)
-			
-			X_train.append(np.asarray(currentSA))
-			y_train.append(np.asarray(target))
-
-		X_train = np.array(X_train)
-		y_train = np.array(y_train)
-
-		#Now update the model or Q-function
-		self.model.fit(X_trian, y_train)
-		
-		return None
+        #Standardize the features
+        X_scaled = self.feature_scaler.fit_transform(X_train)
+        
+        #Now update the model or Q-function
+        #self.model.partial_fit(X_scaled, y_train)
+        self.model.fit(X_train, y_train)
+        #self.model.fit(X_scaled, y_train)
+'''
