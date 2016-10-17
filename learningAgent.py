@@ -73,7 +73,7 @@ class LearningAgent:
                 if q >= QValue:
                     optimalAction = a
                     QValue = q 
-             return [optimalAction], gama*QValue
+             return [optimalAction], QValue
          else:
              legalActions = self.getLegalActions(state)  #check this                
              optimalReward = None
