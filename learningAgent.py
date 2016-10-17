@@ -55,9 +55,6 @@ class LearningAgent:
     
     def getAction(self,episodeNumber, state, model, environment, k, gama,timeStamp):
          """returns a tupple of optimal actions , reward."""
-         if self.getLegalActions(state)==None:
-                return None,-100000
-
          if k==0:
              legalActions=self.getLegalActions(state)  #check this
              '''
@@ -82,6 +79,7 @@ class LearningAgent:
              optimalReward = None
              optimalActions = []
              currentOPtimalAction = None
+             atleastOnce = False
 
              for action in legalActions:
                  #check the return order for getNextState here
@@ -89,16 +87,15 @@ class LearningAgent:
                  nextState, current_reward, isValid = environment.getNextState(episodeNumber,timeStamp, state, self.actions[action]) 
                  
                  if isValid:
-                     continue                    
+                     continue   
+                 atleastOnce = True
                  actionTupples, reward = self.getAction(episodeNumber,nextState, model, environment, k-1, gama, timeStamp+1)
-
-
-                 
                  if optimalReward < current_reward + gama*reward:
                      optimalReward = current_reward + gama*reward
                      currentOPtimalAction = action
                      optimalActions = actionTupples
-             
+             if not atleastOnce :
+                return [None], -100000
              return [currentOPtimalAction] + optimalActions, optimalReward
 
                     
