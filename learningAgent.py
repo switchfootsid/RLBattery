@@ -46,16 +46,18 @@ class LearningAgent:
             '''
             return legal_actions
 
-    def exploration(self, episode_number, time_step, environment, k):
+    def exploration(self, episode_number, time_step, environment, k, functionApproximator, gamma):
             legalActions = self.getLegalActions(self.currentState)   
             action_index = random.choice(legalActions)
             state, cumulativeReward = environment.getCumulativeReward(episode_number, time_step, k, [self.actions[action_index]])
-            #print state, cumulativeReward
+            if state != None:
+                qvalue = functionApproximator.predictQvalue(state, legalActions)
+                cumulativeReward += gamma * qvalue
             return [action_index], cumulativeReward
     
     def getAction(self,episodeNumber, state, model, environment, k, gama,timeStamp):
          """returns a tupple of optimal actions , reward."""
-         if k==0:
+         if k == 0:
              legalActions=self.getLegalActions(state)  #check this
              '''
              if self.debug and len(legalActions)== 0:
@@ -65,7 +67,7 @@ class LearningAgent:
                 file.close()
             '''
              flag=0             
-             Qvalues =[(legalActions[i], model.predictQvalue(state,self,[j])) for i,j in enumerate(legalActions)]
+             Qvalues =[(legalActions[i], model.predictQvalue(state,[j])) for i,j in enumerate(legalActions)]
              QValue = Qvalues[0][1]
              optimalAction = Qvalues[0][0]
 
@@ -94,8 +96,9 @@ class LearningAgent:
                      optimalReward = current_reward + gama*reward
                      currentOPtimalAction = action
                      optimalActions = actionTupples
+             
              if not atleastOnce :
-                return [None], -100000
+                return [None], -10000
              return [currentOPtimalAction] + optimalActions, optimalReward
 
                     

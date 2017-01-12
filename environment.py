@@ -7,12 +7,12 @@ class Environment :
 	def __init__(self, Gamma, eta, day_chunk, total_years) :
 		self.eta = eta #(battery efficiency)
 		self.Gamma = Gamma
-		self.start = 0 #pick season 
+		self.start = 280 #pick season 
 		self.day_chunk = day_chunk
-		self.df_solar = pd.read_csv('./agrregate_solar.csv')
+		self.df_solar = pd.read_csv('./solar_double.csv')
 	    	self.df_load = pd.read_csv('./load_data_peak6.csv')
 		self.training_time = total_years 
-		self.diff = (self.df_load.ix[0:self.day_chunk-1] - self.df_solar.ix[0:self.day_chunk-1]) #change here by Siddharth, just take first 15 days 
+		self.diff = (self.df_load.ix[310:310+self.day_chunk-1] - self.df_solar.ix[310:310+self.day_chunk-1]) #change here by Siddharth, just take first 15 days 
     		#self.diff = (self.df_load - self.df_solar) 
     		self.net_load = pd.concat([self.diff]*self.training_time, ignore_index=True).values.tolist()
     		self.currentState = None
@@ -28,7 +28,8 @@ class Environment :
 		energy_level = E_init
 		price = self.getPrice(0)
 		
-		initialState = [net_load, energy_level, price]
+		#initialState = [net_load, energy_level, price] 
+		initialState =  [net_load, energy_level, price, 0]
 		self.currentState = initialState
 
 		return initialState
@@ -36,27 +37,26 @@ class Environment :
 	### CHANGE HERE --- 3rd October ---
 	def nextStep(self, episode_number, time_step, action_sequence, k, FA, agent) :
 		'''
-	        Perform constraint checking (energy, grid) and assign penalty/rewards.
+		Perform constraint checking (energy, grid) and assign penalty/rewards.
 	        Output: reward/penalty, next state, constraint satisfaction (boolean)
 
 	        CHANGE HERE by Siddharth: 
 	        currentStateBackup passed from main(), this ensures coherent state updates between learningAgent, main() and environment classes. 
 	        PLEASE CHECK.
 	        '''
-	        #self.currentState = currentStateBackup 
-		lastState, cumulativeReward = self.getCumulativeReward(episode_number, time_step, k, action_sequence)
+	        lastState, cumulativeReward = self.getCumulativeReward(episode_number, time_step, k, action_sequence)
 	        self.currentState, reward, isValid = self.getNextState(episode_number, time_step, self.currentState, action_sequence[0])
 
 	        if lastState == None:
 	        	# bad action P_grid < 0
 	        	return self.currentState, cumulativeReward, isValid
 
-	       	qValueLastState = FA.predictQvalue(lastState, agent, agent.getLegalActions(lastState))
+	       	qValueLastState = FA.predictQvalue(lastState, agent.getLegalActions(lastState))
 
 	        #if k == 0: ### CHANGE HERE
 	        #	return self.currentState, cumulativeReward + self.Gamma * qValueLastState, isValid
 		
-		return self.currentState, cumulativeReward + (self.Gamma**(k+1))*qValueLastState, isValid
+		return self.currentState, cumulativeReward + (self.Gamma**(k))*qValueLastState, isValid
 
 	
 	def getCumulativeReward(self, episode_number, time_step, k, actions) :
@@ -66,8 +66,8 @@ class Environment :
 		cr = 0
 
 		### CHANGE HERE -- 3rd October --
-		for i in range(0, k+1) :
-			#print("actions in get nextstate",actions)			
+		for i in range(0, k) :
+			#print("actions in get nextstate",actions)
 			lastState, reward, isValid = self.getNextState(episode_number, time_step, state, actions[i])
 			#print 'state', state, reward, isValid
 			time_step += 1
@@ -93,8 +93,8 @@ class Environment :
 	def getNextState(self, episode_number, time_step, state_k, action_k) :
 		#print "state in getNextState",state_k
 		current_netload = state_k[0]
-        	current_energy = state_k[1]
-		
+		current_energy = state_k[1]
+	
 		if action_k >= 0:
 			P_charge, P_discharge = action_k, 0.0
 	    	else:
@@ -103,7 +103,6 @@ class Environment :
 	        E_next = current_energy + self.eta * P_charge + P_discharge
 	        P_grid = current_netload + P_charge + P_discharge
 		isValid = (P_grid < 0)
-		
 		reward  = - P_grid*self.getPrice(time_step)
 		
 		if isValid:
@@ -111,7 +110,7 @@ class Environment :
 			nextState = None
 
 		price = self.getPrice(time_step+1)
-		nextState = [self.getNetload(episode_number, time_step+1), E_next, price]
+		nextState = [self.getNetload(episode_number, time_step+1), E_next, price, time_step+1]
 		#print "nextstate after ",nextState
 		return nextState, reward, isValid
 	
@@ -142,7 +141,9 @@ class Environment :
 
 	
 	def getPrice(self, timeStep) :
-		price = [.040,.040,.040,.040,.040,.040,.080,.080,.080,.080,.040,.040,.080,.080,.080,.040,.040,.120,.120,.040,.040,.040,.040,.040]
+		#price = [.040,.040,.040,.040,.040,.040,.080,.080,.080,.080,.040,.040,.080,.080,.080,.040,.040,.120,.120,.040,.040,.040,.040,.040]
+		price = [.040,.040,.080,.080,.120,.240,.120,.040,.040,.040,.040,.080,.120,.080,.120,.040,.040,.120,.120,.040,.040,.040,.040,.040]
+		#price = [.040,.040,.040,.040,.040,.040,.040,.040,.040,.040,.040,.040,.040,.040,.040,.040,.040,.080, .080,.120,.120,.040,.040,.040]
 		if timeStep > 23 :
 			timeStep %= 24
 		return price[timeStep]
@@ -153,7 +154,7 @@ class Environment :
 			episode_number %= self.day_chunk*self.training_time
 			timeStep %= 24
 		solar_chunk = self.df_solar.ix[self.start:self.start+self.day_chunk-1].reset_index(drop=True)
-		return solar_chunk.ix[0][timeStep]
+		return solar_chunk.ix[episode_number][timeStep]
 
 	def getLoad(self, episode_number, timeStep):
 		if timeStep > 23 :
