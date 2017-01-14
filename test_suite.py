@@ -10,13 +10,23 @@
 2. With prediction and Without Prediction  - every graph must have two plots (with and without prediction model)	
 
 """
-import main
+import main as m
 
 def main(type_flag):
+	
 	if type_flag == 1:
+		#please make canges to the other main like passing pricing_shceme as an argument to the environment class
 		summer = (0, 30)
 		winter = (275, 30)
-		others = ()
+		others = () # please fill with proper start and duration
+		eta = 0.1
+		E_cap = 6.4 
+		P_cap = 3.0
+		total_years = 5
+		price = [.040,.040,.080,.080,.120,.240,.120,.040,.040,.040,.040,.080,.120,.080,.120,.040,.040,.120,.120,.040,.040,.040,.040,.040]
+		DOD = 0.1
+		m.main(summer[0], summer[1], eta, E_cap, P_cap, epsilon, total_years, pricing_scheme, DOD)
+		m.main(winter[0], winter[1], eta, E_cap, P_cap, epsilon, total_years, pricing_scheme, DOD)
 	elif type_flag == 2:
 
 	elif type_flag == 3:
