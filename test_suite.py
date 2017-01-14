@@ -19,7 +19,7 @@ def main(type_flag):
 		summer = (0, 30)
 		winter = (275, 30)
 		others = () # please fill with proper start and duration
-		eta = 0.1
+		eta = 0.9
 		E_cap = 6.4 
 		P_cap = 3.0
 		total_years = 5
