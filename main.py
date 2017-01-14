@@ -13,17 +13,17 @@ import cPickle as pickle
 import warnings
 warnings.filterwarnings('ignore')
 
-def main():
+def main(start_date, day_chunk, eta, E_cap, P_cap, epsilon, total_years, price_scheme, DOD):
 	isTrainingOn = True 
 	gamma = 0.89
-	eta = 0.9 
-	day_chunk = 20
-	total_years = 5
+	#eta = 0.9 
+	#day_chunk = 20
+	#total_years = 5
 	episode_number = 0
-	E_cap = 6.4 # kWh
-	P_cap = 3.0 #kW
-	E_init = 0.3*E_cap #kWh
-	epsilon = 0.3
+	#E_cap = 6.4 
+	#P_cap = 3.0 
+	E_init = (1-DOD)*E_cap # 0.3*E_cap 
+	#epsilon = 0.3
 	actions = np.arange(-P_cap, P_cap + 0.01, 0.5).tolist()
 	#actions.sort()
 	total_number_hours = 24
@@ -39,7 +39,7 @@ def main():
 	action_list = []
 	
 	#Creation of objects
-	environment = Environment(gamma, eta, day_chunk, total_years)
+	environment = Environment(gamma, eta, day_chunk, total_years, start_date, day_chunk, price_scheme)
 	environment.setCurrentState(episode_number, E_init)
 	learningAgent = LearningAgent(environment.currentState, actions, E_cap, P_cap, epsilon)
 	funtionApproximator = FunctionApproximation('extra_trees', actions)
