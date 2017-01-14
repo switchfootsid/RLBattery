@@ -33,4 +33,9 @@ def main(type_flag):
 
 	else:
 
+		
+if __name__ == '__main__' :
+	for type in [1, 2, 3, 4] :
+		main(type)
+
 
