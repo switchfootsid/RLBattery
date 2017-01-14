@@ -18,16 +18,22 @@ def main(type_flag):
 		#please make canges to the other main like passing pricing_shceme as an argument to the environment class
 		summer = (0, 30)
 		winter = (275, 30)
-		others = () # please fill with proper start and duration
+		#others = () # please fill with proper start and duration
 		eta = 0.9
 		E_cap = 6.4 
 		P_cap = 3.0
 		total_years = 5
 		price = [.040,.040,.080,.080,.120,.240,.120,.040,.040,.040,.040,.080,.120,.080,.120,.040,.040,.120,.120,.040,.040,.040,.040,.040]
-		DOD = 0.1
+		DOD = 0.2
 		m.main(summer[0], summer[1], eta, E_cap, P_cap, epsilon, total_years, pricing_scheme, DOD)
 		m.main(winter[0], winter[1], eta, E_cap, P_cap, epsilon, total_years, pricing_scheme, DOD)
 	elif type_flag == 2:
+		#price = [.040,.040,.080,.080,.120,.240,.120,.040,.040,.040,.040,.080,.120,.080,.120,.040,.040,.120,.120,.040,.040,.040,.040,.040]
+		#dyna_price = [.040,.040,.080,.080,.120,.240,.120,.040,.040,.040,.040,.080,.120,.080,.120,.040,.040,.120,.120,.040,.040,.040,.040,.040]
+		#eta = 0.9
+		#E_cap = 6.4 
+		#P_cap = 3.0
+		#total_years = 5
 
 	elif type_flag == 3:
 
@@ -35,7 +41,7 @@ def main(type_flag):
 
 		
 if __name__ == '__main__' :
-	for type in [1, 2, 3, 4] :
-		main(type)
+	for type_flag in [1, 2, 3, 4] :
+		main(type_flag)
 
 
