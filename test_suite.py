@@ -14,22 +14,25 @@ import sys
 
 def main(type_flag):
 	
+	eta = 0.9 #efficiency of battery
+	DOD = 0.2 #depth of discharge for battery
+	total_years = 4 #total training years
+	epsilon = 0.8 #exploration control 
+	
 	if type_flag == 1:
 		#please make canges to the other main like passing pricing_shceme as an argument to the environment class
 		summer = (334, 30) #This is April, the hottest month. Full (April, May, June, July) [334, 94]  
 		winter = (261, 30) #This is Feb, the coldest month. Full (Dec, Jan, Feb) [212,303]
 		#others = (95,30) # (Aug, Sep, Oct, Nov and March) [95, 211] [303,333]
-		eta = 0.9
 		E_cap = 6.4 
 		P_cap = 3.0
-		total_years = 5
-		price = [.040,.040,.040,.040,.040,.040,.080,.080,.080,.080,.040,.040,.080,.080,.080,.040,.040,.120,.120,.040,.040,.040,.040,.040]
-		DOD = 0.2
-		season = 'summer'
-		m.main(summer[0], summer[1], eta, E_cap, P_cap, epsilon, total_years, pricing_scheme, DOD, season)
-		season = 'winter'
-		m.main(winter[0], winter[1], eta, E_cap, P_cap, epsilon, total_years, pricing_scheme, DOD, season)
-	elif type_flag == 2:
+		pricing_scheme = [.040,.040,.040,.040,.040,.040,.080,.080,.080,.080,.040,.040,.080,.080,.080,.040,.040,.120,.120,.040,.040,.040,.040,.040]
+		name = '_summer' #identifier for saving the model
+		m.main(summer[0], summer[1], eta, E_cap, P_cap, epsilon, total_years, pricing_scheme, DOD, name)
+		name = '_winter'
+		m.main(winter[0], winter[1], eta, E_cap, P_cap, epsilon, total_years, pricing_scheme, DOD, name)
+	
+	elif type_flag == 3:
 		"""
 		1. Dynamic Pricing - LATER
 		2. Savings Vs peak-to-off-peak price ratio (while keeping the average price constant) for a X kWh capacity battery.
@@ -40,16 +43,27 @@ def main(type_flag):
 		#E_cap = 6.4 
 		#P_cap = 3.0
 		#total_years = 5
-		eq_ratio = (1.4 -0.024*ratio)/0.56 #ratio for adjusting time-slots to keep average price constant. 
+		limits = (60,30)
+		name = '_pricing'
+		E_cap = 6.4 
+		P_cap = 3.0
+		for i, ratio in enumerate(ratio_list):
+			eq_ratio = (1.4 - 0.024*ratio)/0.56 #ratio for adjusting time-slots to keep average price constant.
+			name = name + str(i)
+			m.main(limits[0], limits[1], eta, E_cap, P_cap, epsilon, total_years, pricing_scheme, DOD, name)
 
-	elif type_flag == 3:
+	elif type_flag == 2:
 		"""
 		Vary E_cap = [6,9,12,15,18,21,24,30] and keep the charging rate (P_cap) constant.
 		"""
-		E_cap = 
-
-	else:
-
+		pricing_scheme = [.040,.040,.040,.040,.040,.040,.080,.080,.080,.080,.040,.040,.080,.080,.080,.040,.040,.120,.120,.040,.040,.040,.040,.040]
+		energy_rating = [6,9,12,15,18,21,24,30]
+		P_cap = 3.0
+		limits = (60,30)
+		name = '_e_cap'
+		for E_cap in energy_rating:
+			name = name + str(E_cap)
+			m.main(limits[0], limits[1], eta, E_cap, P_cap, epsilon, total_years, pricing_scheme, DOD, name)
 		
 if __name__ == '__main__' :
 	#for type_flag in [1, 2, 3] :
