@@ -9,7 +9,7 @@ class Environment :
 		self.Gamma = Gamma
 		self.start = start_date #pick season 
 		self.day_chunk = day_chunk
-		self.df_solar = pd.read_csv('./solar_double.csv')
+		self.df_solar = pd.read_csv('./solardata.csv')
 	    	self.df_load = pd.read_csv('./load_data_peak6.csv') # %Peak Load
 		self.training_time = total_years 
 		self.diff = (self.df_load.ix[self.start:self.start+self.day_chunk-1] - self.df_solar.ix[self.start:self.start+self.day_chunk-1]) #change here by Siddharth, just take first 15 days 
