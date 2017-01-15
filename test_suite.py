@@ -25,8 +25,10 @@ def main(type_flag):
 		total_years = 5
 		price = [.040,.040,.040,.040,.040,.040,.080,.080,.080,.080,.040,.040,.080,.080,.080,.040,.040,.120,.120,.040,.040,.040,.040,.040]
 		DOD = 0.2
-		m.main(summer[0], summer[1], eta, E_cap, P_cap, epsilon, total_years, pricing_scheme, DOD)
-		m.main(winter[0], winter[1], eta, E_cap, P_cap, epsilon, total_years, pricing_scheme, DOD)
+		season = 'summer'
+		m.main(summer[0], summer[1], eta, E_cap, P_cap, epsilon, total_years, pricing_scheme, DOD, season)
+		season = 'winter'
+		m.main(winter[0], winter[1], eta, E_cap, P_cap, epsilon, total_years, pricing_scheme, DOD, season)
 	elif type_flag == 2:
 		"""
 		1. Dynamic Pricing - LATER
