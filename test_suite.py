@@ -18,7 +18,7 @@ def main(type_flag):
 	DOD = 0.2 #depth of discharge for battery
 	total_years = 4 #total training years
 	epsilon = 0.8 #exploration control 
-	
+
 	if type_flag == 1:
 		#please make canges to the other main like passing pricing_shceme as an argument to the environment class
 		summer = (334, 30) #This is April, the hottest month. Full (April, May, June, July) [334, 94]  
@@ -68,5 +68,6 @@ def main(type_flag):
 if __name__ == '__main__' :
 	#for type_flag in [1, 2, 3] :
 	main(int(sys.argv[1]))
+
 
 

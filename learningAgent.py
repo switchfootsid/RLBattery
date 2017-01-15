@@ -19,8 +19,6 @@ class LearningAgent:
         self.epsilon=epsilon
         self.E_min = (1-0.80)*self.E_max #depth of discharge
         self.E_init = (0.30)*self.E_max #30% of charge every morning
-        
-
 
     def getLegalActions(self, currentState):
             '''

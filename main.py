@@ -13,7 +13,7 @@ import cPickle as pickle
 import warnings
 warnings.filterwarnings('ignore')
 
-def main(start_date, day_chunk, eta, E_cap, P_cap, epsilon, total_years, price_scheme, DOD):
+def main(start_date, day_chunk, eta, E_cap, P_cap, epsilon, total_years, price_scheme, DOD, name):
 	isTrainingOn = True 
 	gamma = 0.89
 	#eta = 0.9 
@@ -39,7 +39,7 @@ def main(start_date, day_chunk, eta, E_cap, P_cap, epsilon, total_years, price_s
 	action_list = []
 	
 	#Creation of objects
-	environment = Environment(gamma, eta, day_chunk, total_years, start_date, day_chunk, price_scheme)
+	environment = Environment(gamma, eta, total_years, start_date, day_chunk, price_scheme)
 	environment.setCurrentState(episode_number, E_init)
 	learningAgent = LearningAgent(environment.currentState, actions, E_cap, P_cap, epsilon)
 	funtionApproximator = FunctionApproximation('extra_trees', actions)
@@ -51,12 +51,12 @@ def main(start_date, day_chunk, eta, E_cap, P_cap, epsilon, total_years, price_s
 	
 	funtionApproximator.models = models
 	"""
-	"""
+
 	with open('./models/featurizer.pkl', 'rb') as ff:
 		featurizer = pickle.load(ff)
 	
 	funtionApproximator.featurizer = featurizer
-	"""
+
 	total_iterations = total_years * day_chunk #day_chunk*total_years
 	lasting = 1
 
@@ -138,33 +138,39 @@ def main(start_date, day_chunk, eta, E_cap, P_cap, epsilon, total_years, price_s
 		if (learningAgent.epsilon >= 0.0):
 			learningAgent.epsilon -= 1/total_iterations
 		
-		if(episode_number%2 == 0) :
+		if(episode_number%10 == 0) :
 			print ("done with episode number = " + str(episode_number))
 			print ("lasted days = ", len([1 for x in lasting_list if x >= 24]))
 			
-			with open('./models/fqi_winter.pkl', 'wb') as fp:
+			file_name = './agent_' + name + '.pkl'  
+			#with open('./models/fqi_winter.pkl', 'wb') as fp:
+			with open(file_name, 'wb') as fp:
 				pickle.dump(funtionApproximator.models, fp)
 			
 			print 'saving ...'
 		episode_number += 1
 		reward_list.append(rewardCumulative)
 		
-	plt.plot(action_list)
-	plt.xlabel('Action value')
-	plt.ylabel('Training Episodes')
-	plt.show()
+	#plt.plot(action_list)
+	#plt.xlabel('Action value')
+	#plt.ylabel('Training Episodes')
+	#plt.show()
 	
-	plt.plot(grid_list)
-	plt.ylabel('Grid value')
-	plt.xlabel('Training Episodes')
-	plt.show()
-	print learningAgent.epsilon
+	#plt.plot(grid_list)
+	#plt.ylabel('Grid value')
+	#plt.xlabel('Training Episodes')
+	#plt.show()
+	#print learningAgent.epsilon
 
-	with open('./models/fqi_winter.pkl','wb') as fp:
+	#with open('./models/fqi_winter.pkl', 'wb') as fp:
+	with open(file_name, 'wb') as fp:
 		pickle.dump(funtionApproximator.models, fp)
+
+	#with open('./models/fqi_winter.pkl','wb') as fp:
+	#	pickle.dump(funtionApproximator.models, fp)
 	
 	with open('./models/featurizer.pkl', 'w') as ff:
 		pickle.dump(funtionApproximator.featurizer, ff)
 	
-if __name__ == '__main__' :
-    	main()
+#if __name__ == '__main__' :
+#    	main()

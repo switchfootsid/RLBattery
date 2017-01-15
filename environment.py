@@ -4,17 +4,18 @@ import pandas as pd
 debug = not True
 
 class Environment :
-	def __init__(self, Gamma, eta, day_chunk, total_years) :
+	def __init__(self, Gamma, eta, total_years, start_date, day_chunk, price_scheme) :
 		self.eta = eta #(battery efficiency)
 		self.Gamma = Gamma
-		self.start = 280 #pick season 
+		self.start = start_date #pick season 
 		self.day_chunk = day_chunk
 		self.df_solar = pd.read_csv('./solar_double.csv')
-	    	self.df_load = pd.read_csv('./load_data_peak6.csv')
+	    	self.df_load = pd.read_csv('./load_data_peak6.csv') # %Peak Load
 		self.training_time = total_years 
-		self.diff = (self.df_load.ix[310:310+self.day_chunk-1] - self.df_solar.ix[310:310+self.day_chunk-1]) #change here by Siddharth, just take first 15 days 
+		self.diff = (self.df_load.ix[self.start:self.start+self.day_chunk-1] - self.df_solar.ix[self.start:self.start+self.day_chunk-1]) #change here by Siddharth, just take first 15 days 
     		#self.diff = (self.df_load - self.df_solar) 
     		self.net_load = pd.concat([self.diff]*self.training_time, ignore_index=True).values.tolist()
+    		self.price_scheme = price_scheme
     		self.currentState = None
 		
 	def setCurrentState(self, episode_number, E_init):
@@ -142,11 +143,11 @@ class Environment :
 	
 	def getPrice(self, timeStep) :
 		#price = [.040,.040,.040,.040,.040,.040,.080,.080,.080,.080,.040,.040,.080,.080,.080,.040,.040,.120,.120,.040,.040,.040,.040,.040]
-		price = [.040,.040,.080,.080,.120,.240,.120,.040,.040,.040,.040,.080,.120,.080,.120,.040,.040,.120,.120,.040,.040,.040,.040,.040]
+		#price = [.040,.040,.080,.080,.120,.240,.120,.040,.040,.040,.040,.080,.120,.080,.120,.040,.040,.120,.120,.040,.040,.040,.040,.040]
 		#price = [.040,.040,.040,.040,.040,.040,.040,.040,.040,.040,.040,.040,.040,.040,.040,.040,.040,.080, .080,.120,.120,.040,.040,.040]
 		if timeStep > 23 :
 			timeStep %= 24
-		return price[timeStep]
+		return self.price_scheme[timeStep]
 
 	def getSolar(self, episode_number,timeStep):
 		if timeStep > 23 :
