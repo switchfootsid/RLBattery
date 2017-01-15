@@ -10,6 +10,7 @@
 
 """
 import main as m
+import sys 
 
 def main(type_flag):
 	
@@ -49,7 +50,7 @@ def main(type_flag):
 
 		
 if __name__ == '__main__' :
-	for type_flag in [1, 2, 3] :
-		main(type_flag)
+	#for type_flag in [1, 2, 3] :
+	main(int(sys.argv[1]))
 
 
