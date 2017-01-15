@@ -52,7 +52,7 @@ def main(start_date, day_chunk, eta, E_cap, P_cap, epsilon, total_years, price_s
 	funtionApproximator.models = models
 	"""
 
-	with open('./models/featurizer.pkl', 'rb') as ff:
+	with open('./featurizer.pkl', 'rb') as ff:
 		featurizer = pickle.load(ff)
 	
 	funtionApproximator.featurizer = featurizer
