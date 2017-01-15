@@ -169,7 +169,7 @@ def main(start_date, day_chunk, eta, E_cap, P_cap, epsilon, total_years, price_s
 	#with open('./models/fqi_winter.pkl','wb') as fp:
 	#	pickle.dump(funtionApproximator.models, fp)
 	
-	with open('./models/featurizer.pkl', 'w') as ff:
+	with open('./featurizer.pkl', 'w') as ff:
 		pickle.dump(funtionApproximator.featurizer, ff)
 	
 #if __name__ == '__main__' :
