@@ -16,7 +16,7 @@ def main(type_flag):
 	
 	eta = 0.9 #efficiency of battery
 	DOD = 0.2 #depth of discharge for battery
-	total_years = 4 #total training years
+	total_years = 2 #total training years
 	epsilon = 0.8 #exploration control 
 
 	if type_flag == 1:
@@ -54,7 +54,7 @@ def main(type_flag):
 
 	elif type_flag == 2:
 		"""
-		Vary E_cap = [6,9,12,15,18,21,24,30] and keep the charging rate (P_cap) constant.
+		Vary E_cap = [6,9,12,18,24,30] and keep the charging rate (P_cap) constant.
 		"""
 		pricing_scheme = [.040,.040,.040,.040,.040,.040,.080,.080,.080,.080,.040,.040,.080,.080,.080,.040,.040,.120,.120,.040,.040,.040,.040,.040]
 		energy_rating = [6,9,12,15,18,21,24,30]
