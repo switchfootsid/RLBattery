@@ -48,7 +48,7 @@ def main(type_flag):
 		eta = 0.9
 		E_cap = 6.4 
 		P_cap = 3.0
-		total_years = 2
+		total_years = 3
 		limits = (334,30)
 		name = '_dynamic_pricing'
 		E_cap = 6.4 
