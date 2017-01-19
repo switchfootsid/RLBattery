@@ -22,7 +22,7 @@ def main(start_date, day_chunk, eta, E_cap, P_cap, epsilon, total_years, price_s
 	episode_number = 0
 	#E_cap = 6.4 
 	#P_cap = 3.0 
-	E_init = (1-DOD)*E_cap # 0.3*E_cap 
+	E_init = 0.3*E_cap 
 	#epsilon = 0.3
 	actions = np.arange(-P_cap, P_cap + 0.01, 0.5).tolist()
 	#actions.sort()
