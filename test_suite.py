@@ -16,7 +16,7 @@ def main(type_flag):
 	
 	eta = 0.9 #efficiency of battery
 	DOD = 0.2 #depth of discharge for battery
-	total_years = 2 #total training years
+	total_years = 3 #total training years
 	epsilon = 0.8 #exploration control 
 
 	if type_flag == 1:
