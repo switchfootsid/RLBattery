@@ -68,7 +68,7 @@ def main(type_flag):
 
 		energy_rating = [6,9,12,18,21,24,30]
 		P_cap = 3.0
-		limits = (60,30)
+		limits = (334,30)
 		name = '_e_cap'
 		for E_cap in energy_rating:
 			name = name + str(E_cap)
