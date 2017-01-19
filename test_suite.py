@@ -51,8 +51,6 @@ def main(type_flag):
 		total_years = 3
 		limits = (334,30)
 		name = '_dynamic_pricing'
-		E_cap = 6.4 
-		P_cap = 3.0
 		#for i, ratio in enumerate(ratio_list):
 		#	eq_ratio = (1.4 - 0.024*ratio)/0.56 #ratio for adjusting time-slots to keep average price constant.
 		#	name = name + str(i)
@@ -69,8 +67,8 @@ def main(type_flag):
 		energy_rating = [6,9,12,18,21,24,30]
 		P_cap = 3.0
 		limits = (334,30)
-		name = '_e_cap'
 		for E_cap in energy_rating:
+			name = '_e_cap_'
 			name = name + str(E_cap)
 			m.main(limits[0], limits[1], eta, E_cap, P_cap, epsilon, total_years, pricing_scheme, DOD, name)
 		
