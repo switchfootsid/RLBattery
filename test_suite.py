@@ -41,21 +41,26 @@ def main(type_flag):
 		"""
 		#dyna_price = [0.007, 0.016, 0.011, 0.021, 0.007, 0.011, 0.01, 0.019, 0.01, 0.006, 0.02, 0.013, 0.021, 0.007, 0.017, 0.02, 0.005, 0.008, 0.021, 0.011, 0.017, 0.024, 0.01, 0.01]
 		#price = [.0040,.0040,.0040,.0040,.0040,.0040,.0080,.0080,.0080,.0080,.0040,.0040,.0080,.0080,.0080,.0040,.0040,.0120,.0120,.0040,.0040,.0040,.0040,.0040]
-		price = [.087,.087,.087,.087,.087,.087,0.087,.132,.132,.132,.132,.18,.18,.18,.18,.18,.18,.132,.132, 0.087,.087,.087,.087,0.087]
-		
+		tou_price = [.087,.087,.087,.087,.087,.087,0.087,.132,.132,.132,.132,.18,.18,.18,.18,.18,.18,.132,.132, 0.087,.087,.087,.087,0.087]
 		#dyna_price generated using np.uniform(low=0.087, high=0.24)
 		dyna_price = [0.09, 0.089, 0.147, 0.16, 0.191, 0.14, 0.168, 0.193, 0.089, 0.221, 0.225, 0.198, 0.147, 0.131, 0.207, 0.088, 0.214, 0.184, 0.1, 0.163, 0.157, 0.188, 0.147, 0.126]
+		
 		eta = 0.9
 		E_cap = 6.4 
 		P_cap = 3.0
 		total_years = 3
-		limits = (334,20)
-		name = '_dynamic_pricing'
+		
+		limits = (334, 20)
+		
 		#for i, ratio in enumerate(ratio_list):
 		#	eq_ratio = (1.4 - 0.024*ratio)/0.56 #ratio for adjusting time-slots to keep average price constant.
 		#	name = name + str(i)
 		#	m.main(limits[0], limits[1], eta, E_cap, P_cap, epsilon, total_years, pricing_scheme, DOD, name)
-		m.main(limits[0], limits[1], eta, E_cap, P_cap, epsilon, total_years, dyna_price, DOD, name)
+		
+		tou_name = '_tou_price'
+		m.main(limits[0], limits[1], eta, E_cap, P_cap, epsilon, total_years, tou_price, DOD, tou_name)
+		dyna_name = '_dynamic_pricing'
+		m.main(limits[0], limits[1], eta, E_cap, P_cap, epsilon, total_years, dyna_price, DOD, dyna_name)	
 		
 	elif type_flag == 2:
 		"""
