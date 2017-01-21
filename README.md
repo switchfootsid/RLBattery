@@ -1,3 +1,10 @@
+#To-Do:
+
+1. Run for type_flag == 2 (tou, dynamic)
+2. Train prediction models for summer = [334, 334+20] and winter = [261, 261+20] and pickle.
+3. Load above pickled models and run type_flag == 1 WITH prediction.  
+
+
 # RLBattery
 
 1. Datasets
