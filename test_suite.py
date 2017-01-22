@@ -49,7 +49,7 @@ def main(type_flag):
 		eta = 0.9
 		E_cap = 6.4 
 		P_cap = 3.0
-		total_years = 3
+		total_years = 10
 		
 		limits = (334, 20)
 		
